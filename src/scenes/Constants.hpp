@@ -1,0 +1,21 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+extern const float GRAVITY;
+extern const float SCALE;
+
+extern const float FLOORHEIGHT;
+
+extern const float MINGAP;
+extern const float MAXGAP;
+extern const float PIPEHEIGHT;
+extern const float PIPEWIDTH;
+extern const float PIPESPEED;
+extern const float GAPPADDING;
+extern const float PIPESPAWN;
+
+extern const float JUMPVEL;
+
+extern const int ANIMSPEED;
+
+#endif // CONSTANTS_H

@@ -1,0 +1,303 @@
+#include "MainMenuScene.hpp"
+#include "Constants.hpp"
+#include "GameScene.hpp"
+#include "PreGameScene.hpp"
+
+#include <SFML/Graphics.hpp>
+
+#define SCALE 2.f
+
+MainMenuScene::MainMenuScene(
+    SceneManager &sceneManager, EntityManager &entityManager,
+    TextureManager &textureManager, AudioManager &audioManager,
+    sf::RenderWindow &window)
+    : sceneManager(sceneManager), entityManager(entityManager),
+      textureManager(textureManager), audioManager(audioManager),
+      window(window) {}
+
+void MainMenuScene::init() {
+    // makes floor and bg
+    makeBase();
+    makeBackground();
+}
+
+void MainMenuScene::run(const sf::Time dt) {
+    sInput();
+    sMovement(dt);
+    sCollision();
+    sAnimation();
+    sRender();
+    m_sceneFrame++;
+}
+
+void MainMenuScene::onActivate() {
+    // makes bird and text
+    makeBird();
+    makeMenu();
+}
+
+void MainMenuScene::onDeactivate() {
+    // destroy unneeded stuff after use
+    for (auto &button : entityManager.getEntities(button)) {
+        button->kill();
+    }
+
+    for (auto &text : entityManager.getEntities(text)) {
+        text->kill();
+    }
+}
+
+void MainMenuScene::makeMenu() {
+    // create button pointers
+    exit = entityManager.addEntity(EntityTag::button);
+    start = entityManager.addEntity(EntityTag::button);
+
+    // where the buttons will be
+    sf::Vector2f middlePoint(
+        window.getSize().x / 2.f, window.getSize().y / 2.f + 200.f);
+
+    // distance of buttons closest edge from middle point
+    float padding = 20;
+    sf::Vector2f buttonSize(80 * SCALE, 20 * SCALE);
+
+    start->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0),
+        sf::Vector2f(
+            middlePoint.x - padding - buttonSize.x, // a bit left with padding
+            middlePoint.y - buttonSize.y / 2.f),
+        0.f);
+    exit->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0),
+        sf::Vector2f(
+            middlePoint.x + padding, middlePoint.y - buttonSize.y / 2.f),
+        0.f);
+
+    // setting up sprites
+    start->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
+    start->m_sprite->setTextureRect(sf::IntRect(0, 0, 80, 20));
+    start->m_sprite->setPosition(start->m_cTransform->pos);
+    start->m_sprite->setScale(SCALE, SCALE);
+
+    exit->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
+    exit->m_sprite->setTextureRect(sf::IntRect(0, 20, 80, 20));
+    exit->m_sprite->setPosition(exit->m_cTransform->pos);
+    exit->m_sprite->setScale(SCALE, SCALE);
+
+    // adding rectangles to click on
+    start->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
+    exit->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
+    start->m_collisionShape->shape.setPosition(start->m_cTransform->pos);
+    exit->m_collisionShape->shape.setPosition(exit->m_cTransform->pos);
+
+    // setting up text sprite
+    auto welcome = entityManager.addEntity(EntityTag::text);
+    welcome->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tWelcomeText));
+    auto bb = welcome->m_sprite->getLocalBounds();
+    welcome->m_sprite->setOrigin(bb.width / 2, bb.height / 2);
+    welcome->m_sprite->setScale(SCALE, SCALE);
+    welcome->m_sprite->setPosition(sf::Vector2f(
+        window.getSize().x / 2.f,
+        window.getSize().y / 2.f - window.getSize().y / 3.f));
+}
+
+void MainMenuScene::makeBird() {
+    auto bird = entityManager.addEntity(EntityTag::bird);
+
+    bird->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0.f, GRAVITY),
+        sf::Vector2f(
+            window.getSize().x / 2.f -
+                window.getSize().x / 10.f, // bird is located left from middle
+            (window.getSize().y - FLOORHEIGHT) /
+                2.f), // middle of screen without floor height
+        0.f);
+
+    // bird is able to handle input
+    bird->m_cInput = std::make_shared<CInput>();
+
+    // setting up sprite
+    bird->m_sprite = std::make_shared<sf::Sprite>();
+    bird->m_sprite->setTexture(textureManager.getTexture(tBird0));
+    sf::FloatRect sb = bird->m_sprite->getLocalBounds();
+    bird->m_sprite->setOrigin(sb.width / 2.f, sb.height / 2.f);
+    bird->m_sprite->setScale(SCALE, SCALE);
+    bird->m_sprite->setPosition(bird->m_cTransform->pos);
+
+    // adding collision shape
+    bird->m_collisionShape = std::make_shared<CRectangle>(
+        sf::Vector2f(sb.width * 0.8f * SCALE, sb.height * 0.8f * SCALE));
+    bird->m_collisionShape->shape.setOrigin(
+        bird->m_collisionShape->shape.getSize().x / 2,
+        bird->m_collisionShape->shape.getSize().y / 2);
+    bird->m_collisionShape->shape.setPosition(bird->m_cTransform->pos);
+}
+
+void MainMenuScene::makeBase() {
+    // makes bottom floor
+    auto base = entityManager.addEntity(EntityTag::base);
+    base->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tBase));
+    base->m_collisionShape =
+        std::make_shared<CRectangle>(sf::Vector2f(336 * SCALE, 112 * SCALE));
+    base->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(-PIPESPEED, 0),
+        sf::Vector2f(0, window.getSize().y - FLOORHEIGHT), 0.f);
+
+    base->m_sprite->setScale(SCALE, SCALE);
+    base->m_sprite->setPosition(base->m_cTransform->pos);
+}
+
+void MainMenuScene::makeBackground() {
+    // makes background
+    auto bg = entityManager.addEntity(EntityTag::background);
+    bg->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0), sf::Vector2f(0, window.getSize().y), 0.f);
+
+    bg->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tBackground));
+    bg->m_sprite->setScale(SCALE, SCALE);
+    sf::FloatRect bb = bg->m_sprite->getLocalBounds();
+    bg->m_sprite->setOrigin(0, bb.height);
+    bg->m_sprite->setPosition(bg->m_cTransform->pos);
+}
+
+void MainMenuScene::startGame() {
+    // already makes game scene here
+    sceneManager.add(
+        "pre",
+        std::make_shared<PreGameScene>(
+            sceneManager, entityManager, textureManager, audioManager, window));
+    sceneManager.add(
+        "game",
+        std::make_shared<GameScene>(
+            sceneManager, entityManager, textureManager, audioManager, window));
+    sceneManager.switchTo("pre");
+}
+
+void MainMenuScene::sInput() {
+    if (sceneManager.getInputStatus(sf::Keyboard::Space)) {
+        startGame();
+    }
+
+    if (sceneManager.getInputStatus(sf::Keyboard::Q)) {
+        sceneManager.turnOffGame();
+    }
+}
+
+void MainMenuScene::sMovement(const sf::Time dt) {
+    for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+        // bobing motion function
+        // if bird moving up, then slowly add gravity
+        if (up) {
+            if (bird->m_cTransform->velocity.y >= 0) {
+                up = false;
+                bird->m_cTransform->velocity.y = GRAVITY / 2.f;
+            }
+            bird->m_cTransform->velocity.y += GRAVITY * dt.asSeconds();
+        }
+        // else take it away
+        else {
+            if (bird->m_cTransform->velocity.y <= 0) {
+                up = true;
+                bird->m_cTransform->velocity.y = -GRAVITY / 2.f;
+            }
+            bird->m_cTransform->velocity.y -= GRAVITY * dt.asSeconds();
+        }
+
+        // adds velocity and sets positions
+        bird->m_cTransform->pos.y +=
+            bird->m_cTransform->velocity.y * dt.asSeconds();
+        bird->m_collisionShape->shape.setPosition(bird->m_cTransform->pos);
+        bird->m_sprite->setPosition(bird->m_cTransform->pos);
+    }
+}
+
+void MainMenuScene::sCollision() {
+    if (sceneManager.getMouseStatus(sf::Mouse::Left)) {
+        // if mouse down, check for collisions
+        if (start->m_collisionShape->isInside(sceneManager.getMousePos())) {
+            startGame();
+        }
+
+        if (exit->m_collisionShape->isInside(sceneManager.getMousePos())) {
+            sceneManager.turnOffGame();
+        }
+    }
+}
+
+void MainMenuScene::sAnimation() {
+    // handles animations
+
+    // if its not time to switch animation, return
+    if (m_sceneFrame % ANIMSPEED != 0) {
+        return;
+    }
+
+    // gets animation frame
+    int animFrame = (m_sceneFrame / ANIMSPEED) % 4;
+    switch (animFrame) {
+    case 0: {
+        for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+            bird->m_sprite->setTexture(textureManager.getTexture(tBird0));
+        }
+        break;
+    }
+
+    case 1: {
+        for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+            bird->m_sprite->setTexture(textureManager.getTexture(tBird1));
+        }
+        break;
+    }
+
+    case 2: {
+        for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+            bird->m_sprite->setTexture(textureManager.getTexture(tBird2));
+        }
+        break;
+    }
+
+    case 3: {
+        for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+            bird->m_sprite->setTexture(textureManager.getTexture(tBird1));
+        }
+        break;
+    }
+    }
+}
+
+void MainMenuScene::sRender() {
+    // renders needed entities
+    for (auto &bg : entityManager.getEntities(EntityTag::background)) {
+        if (bg->m_sprite) {
+            window.draw(*bg->m_sprite);
+        }
+    }
+
+    for (auto &base : entityManager.getEntities(EntityTag::base)) {
+        if (base->m_sprite) {
+            window.draw(*base->m_sprite);
+        }
+    }
+
+    for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+        if (bird->m_sprite) {
+            window.draw(*bird->m_sprite);
+        }
+    }
+
+    for (auto &text : entityManager.getEntities(EntityTag::text)) {
+        if (text->m_sprite) {
+            window.draw(*text->m_sprite);
+        }
+    }
+
+    for (auto &button : entityManager.getEntities(EntityTag::button)) {
+        if (button->m_sprite) {
+            window.draw(*button->m_sprite);
+        }
+    }
+}
