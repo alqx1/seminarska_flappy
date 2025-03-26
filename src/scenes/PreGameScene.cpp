@@ -77,7 +77,7 @@ void PreGameScene::makeBird() {
     bird->m_sprite->setPosition(bird->m_cTransform->pos);
 
     bird->m_collisionShape = std::make_shared<CRectangle>(
-        sf::Vector2f(sb.width * 0.8f * SCALE, sb.height * 0.8f * SCALE));
+        sf::Vector2f(sb.width * 0.75f * SCALE, sb.height * 0.75f * SCALE));
     bird->m_collisionShape->shape.setOrigin(
         bird->m_collisionShape->shape.getSize().x / 2,
         bird->m_collisionShape->shape.getSize().y / 2);
