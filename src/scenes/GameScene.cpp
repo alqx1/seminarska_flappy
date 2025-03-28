@@ -1,27 +1,38 @@
 #include "GameScene.hpp"
 #include "Constants.hpp"
 #include "GameOverScene.hpp"
-#include <SFML/System/Time.hpp>
-#include <SFML/Window/Event.hpp>
-#include <algorithm>
-#include <cmath>
-#include <math.h>
+
+// Ustvajanje zapisa točk
+static std::vector<unsigned int>
+convertToIndividualNums(const unsigned int num);
+static TextureTag getScoreNumberTag(const unsigned int num);
+static void makeScore(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window, unsigned int score
+);
+
+// Naredi par pip, eno zgoraj, drugo spodaj
+static void makePipePair();
+
+// Preide na naslednjo končno sceno
+static void gameover();
 
 GameScene::GameScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window)
-    : sceneManager(sceneManager), entityManager(entityManager),
-      textureManager(textureManager), audioManager(audioManager),
-      window(window), m_pipeTimer(PIPESPAWN) {}
+    sf::RenderWindow &window
+)
+    : Scene(sceneManager, entityManager, textureManager, audioManager, window) {
+}
 
-void GameScene::init() {}
+void GameScene::init() {
+}
 
 void GameScene::onActivate() {
     m_pipeTimer = PIPESPAWN;
     m_score = 0;
 
-    makeScore();
+    makeScore(entityManager, textureManager, window, m_score);
     // dont need to make bird, since its already made in beginning
 }
 
@@ -32,81 +43,6 @@ void GameScene::onDeactivate() {
     }
     for (auto &scoreBox : entityManager.getEntities(EntityTag::scoreBox)) {
         scoreBox->kill();
-    }
-}
-
-// returns score numbers in vector
-std::vector<unsigned int>
-GameScene::convertToIndividualNums(const unsigned int num) {
-    std::vector<unsigned int> nums;
-    unsigned int i = num;
-    do {
-        nums.emplace_back(i % 10);
-        i /= 10;
-    } while (i > 0);
-
-    std::reverse(nums.begin(), nums.end());
-
-    return nums;
-}
-
-// returns what texture for number to use
-TextureTag GameScene::getScoreNumberTag(const unsigned int num) {
-    switch (num) {
-    case 0:
-        return t0;
-        break;
-    case 1:
-        return t1;
-        break;
-    case 2:
-        return t2;
-        break;
-    case 3:
-        return t3;
-        break;
-    case 4:
-        return t4;
-        break;
-    case 5:
-        return t5;
-        break;
-    case 6:
-        return t6;
-        break;
-    case 7:
-        return t7;
-        break;
-    case 8:
-        return t8;
-        break;
-    case 9:
-        return t9;
-        break;
-    }
-}
-
-// makes score numbers
-void GameScene::makeScore() {
-    std::vector<unsigned int> nums = convertToIndividualNums(m_score);
-    const unsigned int numsSize = nums.size();
-
-    unsigned int positionFactor = 24 * SCALE; // 24 is pixel width of sprite
-
-    // pozabu zakaj to dela
-    // something about handling positions for different
-    // numbers of number textures
-    for (int i = 0; i < numsSize; i++) {
-        auto number = entityManager.addEntity(EntityTag::scoreNumber);
-        number->m_sprite = std::make_shared<sf::Sprite>(
-            textureManager.getTexture(getScoreNumberTag(nums[i])));
-        auto bb = number->m_sprite->getLocalBounds();
-        number->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
-        number->m_sprite->setPosition(
-            window.getSize().x / 2.f - (positionFactor * (numsSize - 1)) / 2.f +
-                positionFactor * i,
-            10 + bb.height / 2.f * SCALE);
-        number->m_sprite->setScale(SCALE, SCALE);
     }
 }
 
@@ -124,25 +60,30 @@ void GameScene::makePipePair() {
     sf::Vector2f pipeShape(PIPEWIDTH * SCALE, PIPEHEIGHT * SCALE);
     bottomPipe->m_collisionShape = std::make_shared<CRectangle>(pipeShape);
     bottomPipe->m_collisionShape->shape.setOrigin(
-        pipeShape.x / 2.f, pipeShape.y / 2.f);
+        pipeShape.x / 2.f, pipeShape.y / 2.f
+    );
     topPipe->m_collisionShape = std::make_shared<CRectangle>(pipeShape);
     topPipe->m_collisionShape->shape.setOrigin(
-        pipeShape.x / 2.f, pipeShape.y / 2.f);
+        pipeShape.x / 2.f, pipeShape.y / 2.f
+    );
 
     float gapSize = randomFloat(MINGAP, MAXGAP);
     float gapMiddle = randomFloat(
         GAPPADDING + gapSize / 2.f,
-        window.getSize().y - GAPPADDING - gapSize / 2.f - FLOORHEIGHT);
+        window.getSize().y - GAPPADDING - gapSize / 2.f - FLOORHEIGHT
+    );
 
     float bottomPos = gapMiddle + gapSize / 2 + pipeShape.y / 2.f;
     float topPos = gapMiddle - gapSize / 2 - pipeShape.y / 2.f;
 
     bottomPipe->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, bottomPos), 0.f);
+        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, bottomPos), 0.f
+    );
     topPipe->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, topPos), 180.f);
+        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, topPos), 180.f
+    );
 
     bottomPipe->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tPipe));
@@ -162,12 +103,14 @@ void GameScene::makePipePair() {
     auto scoreBox = entityManager.addEntity(EntityTag::scoreBox);
     scoreBox->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x, gapMiddle), 0.f);
+        sf::Vector2f(window.getSize().x + pipeShape.x, gapMiddle), 0.f
+    );
     scoreBox->m_collisionShape =
         std::make_shared<CRectangle>(sf::Vector2f(pipeShape.x / 2.f, gapSize));
     sf::FloatRect scorebb = scoreBox->m_collisionShape->shape.getLocalBounds();
     scoreBox->m_collisionShape->shape.setOrigin(
-        scorebb.width / 2.f, scorebb.height / 2.f);
+        scorebb.width / 2.f, scorebb.height / 2.f
+    );
     scoreBox->m_collisionShape->shape.setPosition(scoreBox->m_cTransform->pos);
 }
 
@@ -180,8 +123,10 @@ void GameScene::gameover() {
     sceneManager.remove("gameover");
     sceneManager.add(
         "gameover", std::make_shared<GameOverScene>(
-                        sceneManager, entityManager, textureManager, window,
-                        m_score, m_best));
+                        sceneManager, entityManager, textureManager,
+                        audioManager, window, m_score, m_best
+                    )
+    );
     sceneManager.switchTo("gameover");
     audioManager.play(SoundTag::sHit);
 }
@@ -271,7 +216,8 @@ void GameScene::sMovement(const sf::Time dt) {
         // setting position to collision shape
         if (entity->m_collisionShape && entity->m_cTransform) {
             entity->m_collisionShape->shape.setPosition(
-                entity->m_cTransform->pos);
+                entity->m_cTransform->pos
+            );
         }
     }
 }
@@ -344,7 +290,7 @@ void GameScene::sCollision() {
                      entityManager.getEntities(EntityTag::scoreNumber)) {
                     scoreNum->kill();
                 }
-                makeScore();
+                makeScore(entityManager, textureManager, window, m_score);
                 audioManager.play(SoundTag::sScore);
             }
         }
@@ -431,4 +377,52 @@ void GameScene::run(const sf::Time dt) {
     sAnimation();
     sRender();
     m_sceneFrame++;
+}
+
+// returns score numbers in vector
+std::vector<unsigned int> convertToIndividualNums(const unsigned int num) {
+    std::vector<unsigned int> nums;
+    unsigned int i = num;
+    do {
+        nums.emplace_back(i % 10);
+        i /= 10;
+    } while (i > 0);
+
+    std::reverse(nums.begin(), nums.end());
+
+    return nums;
+}
+
+// returns what texture for number to use
+TextureTag getScoreNumberTag(const unsigned int num) {
+    return (TextureTag)(num + t0);
+}
+
+// makes score numbers
+void makeScore(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window, unsigned int score
+) {
+    std::vector<unsigned int> nums = convertToIndividualNums(score);
+    const unsigned int numsSize = nums.size();
+
+    unsigned int positionFactor = 24 * SCALE; // 24 is pixel width of sprite
+
+    // pozabu zakaj to dela
+    // something about handling positions for different
+    // numbers of number textures
+    for (int i = 0; i < numsSize; i++) {
+        auto number = entityManager.addEntity(EntityTag::scoreNumber);
+        number->m_sprite = std::make_shared<sf::Sprite>(
+            textureManager.getTexture(getScoreNumberTag(nums[i]))
+        );
+        auto bb = number->m_sprite->getLocalBounds();
+        number->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
+        number->m_sprite->setPosition(
+            window.getSize().x / 2.f - (positionFactor * (numsSize - 1)) / 2.f +
+                positionFactor * i,
+            10 + bb.height / 2.f * SCALE
+        );
+        number->m_sprite->setScale(SCALE, SCALE);
+    }
 }

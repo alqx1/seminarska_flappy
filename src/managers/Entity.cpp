@@ -1,6 +1,6 @@
 #include "Entity.hpp"
 
-Entity::Entity(EntityTag tag, int id)
+Entity::Entity(EntityTag tag, unsigned int id)
     : m_tag{tag}, m_id{id}, m_alive{true} {}
 
 void Entity::kill() { m_alive = false; }

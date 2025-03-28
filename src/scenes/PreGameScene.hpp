@@ -13,32 +13,23 @@ class PreGameScene : public Scene {
     PreGameScene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &audioManager,
-        sf::RenderWindow &window);
+        sf::RenderWindow &window
+    );
 
     void init() override;
+    void run(const sf::Time dt) override;
     void onActivate() override;
     void onDeactivate() override;
-    void run(const sf::Time dt) override;
 
+  private:
+    // Sistemi
     void sInput() override;
     void sMovement(const sf::Time dt) override;
     void sAnimation() override;
     void sRender() override;
 
-  private:
-    EntityManager &entityManager;
-    SceneManager &sceneManager;
-    TextureManager &textureManager;
-    AudioManager &audioManager;
-    sf::RenderWindow &window;
-
-    // Ustvari glavnega igralca
-    void makeBird();
-    // Ustvari zapis, ki ga uporabnik sreča pred začenjanjem igranja
-    void makeMessage();
-
     // Shranjuje, v katero smer se premika igralec
-    bool up = true;
+    bool m_up = true;
     // Koliko sličic je že bilo
     unsigned int m_sceneFrame = 0;
 

@@ -33,8 +33,8 @@ class Entity {
   private:
     friend class EntityManager;
 
-    Entity(EntityTag tag, int id);
+    Entity(EntityTag tag, unsigned int id);
     EntityTag m_tag;
-    int m_id;
+    unsigned int m_id;
     bool m_alive;
 };

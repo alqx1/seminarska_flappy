@@ -6,6 +6,8 @@
 #include <string>
 #include <unordered_map>
 
+class Scene;
+
 class SceneManager {
   public:
     SceneManager();

@@ -1,6 +1,12 @@
 #pragma once
 
+#include "../managers/AudioManager.hpp"
+#include "../managers/EntityManager.hpp"
+#include "../managers/SceneManager.hpp"
+#include "../managers/TextureManager.hpp"
 #include <SFML/System/Time.hpp>
+
+class SceneManager;
 
 // Bazni razred, ki ga uporabljajo vse ostale scene
 class Scene {
@@ -23,4 +29,19 @@ class Scene {
     virtual void sCollision() {};
     virtual void sAnimation() {};
     virtual void sRender() {};
+
+  protected:
+    EntityManager &entityManager;
+    SceneManager &sceneManager;
+    TextureManager &textureManager;
+    AudioManager &audioManager;
+    sf::RenderWindow &window;
+
+    Scene(
+        SceneManager &sceneManager, EntityManager &entityManager,
+        TextureManager &textureManager, AudioManager &audioManager,
+        sf::RenderWindow &window)
+    : sceneManager(sceneManager), entityManager(entityManager),
+      textureManager(textureManager), audioManager(audioManager),
+      window(window) {}
 };

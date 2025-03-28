@@ -3,22 +3,39 @@
 #include "GameScene.hpp"
 #include "PreGameScene.hpp"
 
-#include <SFML/Graphics.hpp>
-
 #define SCALE 2.f
+
+// Funkcije za ustvarjanje raznih entitet
+static void makeMenu(
+    std::shared_ptr<Entity> &exit, std::shared_ptr<Entity> &start,
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+);
+static void makeBird(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+);
+static void makeBase(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+);
+static void makeBackground(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+);
 
 MainMenuScene::MainMenuScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window)
-    : sceneManager(sceneManager), entityManager(entityManager),
-      textureManager(textureManager), audioManager(audioManager),
-      window(window) {}
+    sf::RenderWindow &window
+)
+    : Scene(sceneManager, entityManager, textureManager, audioManager, window) {
+}
 
 void MainMenuScene::init() {
     // Ustvari tla in odzadje
-    makeBase();
-    makeBackground();
+    makeBase(entityManager, textureManager, window);
+    makeBackground(entityManager, textureManager, window);
 }
 
 void MainMenuScene::run(const sf::Time dt) {
@@ -32,8 +49,8 @@ void MainMenuScene::run(const sf::Time dt) {
 
 void MainMenuScene::onActivate() {
     // Ustvari ptico/igralca in meni
-    makeBird();
-    makeMenu();
+    makeBird(entityManager, textureManager, window);
+    makeMenu(exit, start, entityManager, textureManager, window);
 }
 
 void MainMenuScene::onDeactivate() {
@@ -47,130 +64,20 @@ void MainMenuScene::onDeactivate() {
     }
 }
 
-void MainMenuScene::makeMenu() {
-    // Ustvarjanje gumbov za začetek in izhod
-    exit = entityManager.addEntity(EntityTag::button);
-    start = entityManager.addEntity(EntityTag::button);
-
-    // Sredinska točka med gumboma
-    sf::Vector2f middlePoint(
-        window.getSize().x / 2.f, window.getSize().y / 2.f + 180.f);
-
-    // Razdalja gumba od sredinske točke
-    float padding = 20;
-    sf::Vector2f buttonSize(80 * SCALE, 20 * SCALE);
-
-    // Nastavljanje položaja gumbov
-    start->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(0, 0),
-        sf::Vector2f(
-            middlePoint.x - padding - buttonSize.x, // Levo od točke
-            middlePoint.y), // Poravnano s sredinsko točko
-        0.f);
-    exit->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(0, 0),
-        sf::Vector2f(
-            middlePoint.x + padding, middlePoint.y),
-        0.f);
-
-    // Pripravljanje slik za gumbe
-    start->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
-    start->m_sprite->setTextureRect(sf::IntRect(0, 0, 80, 20));
-    start->m_sprite->setPosition(start->m_cTransform->pos);
-    start->m_sprite->setScale(SCALE, SCALE);
-
-    exit->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
-    exit->m_sprite->setTextureRect(sf::IntRect(0, 20, 80, 20));
-    exit->m_sprite->setPosition(exit->m_cTransform->pos);
-    exit->m_sprite->setScale(SCALE, SCALE);
-
-    // Dodajanje območji, na katere lahko uporabnik pritisne
-    start->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
-    exit->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
-    start->m_collisionShape->shape.setPosition(start->m_cTransform->pos);
-    exit->m_collisionShape->shape.setPosition(exit->m_cTransform->pos);
-
-    // Ustvarjanje začetnega napisa ter nastavljanje njegovega položaja
-    auto welcome = entityManager.addEntity(EntityTag::text);
-    welcome->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tWelcomeText));
-    auto bb = welcome->m_sprite->getLocalBounds();
-    welcome->m_sprite->setOrigin(bb.width / 2, bb.height / 2);
-    welcome->m_sprite->setScale(SCALE, SCALE);
-    welcome->m_sprite->setPosition(sf::Vector2f(
-        window.getSize().x / 2.f,
-        window.getSize().y / 2.f - window.getSize().y / 3.f));
-}
-
-void MainMenuScene::makeBird() {
-    // Ustvari entiteto
-    auto bird = entityManager.addEntity(EntityTag::bird);
-
-    // Nastavljanje njenega položaja
-    bird->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(0.f, GRAVITY),
-        sf::Vector2f(
-            window.getSize().x / 2.f -
-                window.getSize().x / 10.f, // Ptica je levo od sredine
-            (window.getSize().y - FLOORHEIGHT) /
-                2.f), // Sredina okna brez upoštevanja tal
-        0.f);
-
-    // Dodajanje komponente za vnos
-    bird->m_cInput = std::make_shared<CInput>();
-
-    // Nastavljanje slike za ptico
-    bird->m_sprite = std::make_shared<sf::Sprite>();
-    bird->m_sprite->setTexture(textureManager.getTexture(tBird0));
-    sf::FloatRect sb = bird->m_sprite->getLocalBounds();
-    bird->m_sprite->setOrigin(sb.width / 2.f, sb.height / 2.f);
-    bird->m_sprite->setScale(SCALE, SCALE);
-    bird->m_sprite->setPosition(bird->m_cTransform->pos);
-}
-
-void MainMenuScene::makeBase() {
-    // Naredi tla (slika, kolizijski pravokotnik, nastavi položaj)
-    auto base = entityManager.addEntity(EntityTag::base);
-
-    base->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(0, window.getSize().y - FLOORHEIGHT), 0.f);
-
-    base->m_collisionShape =
-        std::make_shared<CRectangle>(sf::Vector2f(336 * SCALE, 112 * SCALE));
-
-    base->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tBase));
-    base->m_sprite->setScale(SCALE, SCALE);
-    base->m_sprite->setPosition(base->m_cTransform->pos);
-}
-
-void MainMenuScene::makeBackground() {
-    // makes background
-    auto bg = entityManager.addEntity(EntityTag::background);
-    bg->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(0, 0), sf::Vector2f(0, window.getSize().y), 0.f);
-
-    bg->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tBackground));
-    bg->m_sprite->setScale(SCALE, SCALE);
-    sf::FloatRect bb = bg->m_sprite->getLocalBounds();
-    bg->m_sprite->setOrigin(0, bb.height);
-    bg->m_sprite->setPosition(bg->m_cTransform->pos);
-}
-
 void MainMenuScene::startGame() {
     // already makes game scene here
     sceneManager.add(
         "pre",
         std::make_shared<PreGameScene>(
-            sceneManager, entityManager, textureManager, audioManager, window));
+            sceneManager, entityManager, textureManager, audioManager, window
+        )
+    );
     sceneManager.add(
         "game",
         std::make_shared<GameScene>(
-            sceneManager, entityManager, textureManager, audioManager, window));
+            sceneManager, entityManager, textureManager, audioManager, window
+        )
+    );
     sceneManager.switchTo("pre");
 }
 
@@ -296,4 +203,139 @@ void MainMenuScene::sRender() {
             window.draw(*button->m_sprite);
         }
     }
+}
+
+void makeMenu(
+    std::shared_ptr<Entity> &exit, std::shared_ptr<Entity> &start,
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+) {
+    // Ustvarjanje gumbov za začetek in izhod
+    exit = entityManager.addEntity(EntityTag::button);
+    start = entityManager.addEntity(EntityTag::button);
+
+    // Sredinska točka med gumboma
+    sf::Vector2f middlePoint(
+        window.getSize().x / 2.f, window.getSize().y / 2.f + 180.f
+    );
+
+    // Razdalja gumba od sredinske točke
+    float padding = 20;
+    sf::Vector2f buttonSize(80 * SCALE, 20 * SCALE);
+
+    // Nastavljanje položaja gumbov
+    start->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0),
+        sf::Vector2f(
+            middlePoint.x - padding - buttonSize.x, // Levo od točke
+            middlePoint.y
+        ), // Poravnano s sredinsko točko
+        0.f
+    );
+    exit->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0),
+        sf::Vector2f(middlePoint.x + padding, middlePoint.y), 0.f
+    );
+
+    // Pripravljanje slik za gumbe
+    start->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
+    start->m_sprite->setTextureRect(sf::IntRect(0, 0, 80, 20));
+    start->m_sprite->setPosition(start->m_cTransform->pos);
+    start->m_sprite->setScale(SCALE, SCALE);
+
+    exit->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
+    exit->m_sprite->setTextureRect(sf::IntRect(0, 20, 80, 20));
+    exit->m_sprite->setPosition(exit->m_cTransform->pos);
+    exit->m_sprite->setScale(SCALE, SCALE);
+
+    // Dodajanje območji, na katere lahko uporabnik pritisne
+    start->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
+    exit->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
+    start->m_collisionShape->shape.setPosition(start->m_cTransform->pos);
+    exit->m_collisionShape->shape.setPosition(exit->m_cTransform->pos);
+
+    // Ustvarjanje začetnega napisa ter nastavljanje njegovega položaja
+    auto welcome = entityManager.addEntity(EntityTag::text);
+    welcome->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tWelcomeText));
+    auto bb = welcome->m_sprite->getLocalBounds();
+    welcome->m_sprite->setOrigin(bb.width / 2, bb.height / 2);
+    welcome->m_sprite->setScale(SCALE, SCALE);
+    welcome->m_sprite->setPosition(
+        sf::Vector2f(
+            window.getSize().x / 2.f,
+            window.getSize().y / 2.f - window.getSize().y / 3.f
+        )
+    );
+}
+
+void makeBird(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+) {
+    // Ustvari entiteto
+    auto bird = entityManager.addEntity(EntityTag::bird);
+
+    // Nastavljanje njenega položaja
+    bird->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0.f, GRAVITY),
+        sf::Vector2f(
+            window.getSize().x / 2.f -
+                window.getSize().x / 10.f, // Ptica je levo od sredine
+            (window.getSize().y - FLOORHEIGHT) / 2.f
+        ), // Sredina okna brez upoštevanja tal
+        0.f
+    );
+
+    // Dodajanje komponente za vnos
+    bird->m_cInput = std::make_shared<CInput>();
+
+    // Nastavljanje slike za ptico
+    bird->m_sprite = std::make_shared<sf::Sprite>();
+    bird->m_sprite->setTexture(textureManager.getTexture(tBird0));
+    sf::FloatRect sb = bird->m_sprite->getLocalBounds();
+    bird->m_sprite->setOrigin(sb.width / 2.f, sb.height / 2.f);
+    bird->m_sprite->setScale(SCALE, SCALE);
+    bird->m_sprite->setPosition(bird->m_cTransform->pos);
+}
+
+void makeBase(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+) {
+    // Naredi tla (slika, kolizijski pravokotnik, nastavi položaj)
+    auto base = entityManager.addEntity(EntityTag::base);
+
+    base->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(-PIPESPEED, 0),
+        sf::Vector2f(0, window.getSize().y - FLOORHEIGHT), 0.f
+    );
+
+    base->m_collisionShape =
+        std::make_shared<CRectangle>(sf::Vector2f(336 * SCALE, 112 * SCALE));
+
+    base->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tBase));
+    base->m_sprite->setScale(SCALE, SCALE);
+    base->m_sprite->setPosition(base->m_cTransform->pos);
+}
+
+void makeBackground(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window
+) {
+    // makes background
+    auto bg = entityManager.addEntity(EntityTag::background);
+    bg->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(0, 0), sf::Vector2f(0, window.getSize().y), 0.f
+    );
+
+    bg->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tBackground));
+    bg->m_sprite->setScale(SCALE, SCALE);
+    sf::FloatRect bb = bg->m_sprite->getLocalBounds();
+    bg->m_sprite->setOrigin(0, bb.height);
+    bg->m_sprite->setPosition(bg->m_cTransform->pos);
 }

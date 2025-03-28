@@ -8,18 +8,6 @@ AudioManager::AudioManager() {
     addSound(sScore, "./audio/point.wav");
 }
 
-// gets sound buffer
-sf::SoundBuffer &AudioManager::getBuffer(const SoundTag tag) {
-    auto it = m_buffers.find(tag);
-    if (it != m_buffers.end()) {
-        return it->second;
-    }
-    else {
-        std::cerr << "Sound not found" << std::endl;
-        exit(1);
-    }
-}
-
 // adds buffer to buffer map
 void AudioManager::addBuffer(const SoundTag tag, const std::string &filePath) {
     sf::SoundBuffer buf;
@@ -33,7 +21,7 @@ void AudioManager::addBuffer(const SoundTag tag, const std::string &filePath) {
 }
 
 // adds SOUND to sound map (different than buffer)
-void AudioManager::addSound(const SoundTag tag, const std::string& filePath) {
+void AudioManager::addSound(const SoundTag tag, const std::string &filePath) {
     addBuffer(tag, filePath);
     auto it = m_buffers.find(tag);
     if (it != m_buffers.end()) {
@@ -58,4 +46,3 @@ void AudioManager::play(const SoundTag tag) {
         exit(3);
     }
 }
-
