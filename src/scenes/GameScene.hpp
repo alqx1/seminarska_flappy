@@ -2,6 +2,7 @@
 #include "../managers/EntityManager.hpp"
 #include "../managers/SceneManager.hpp"
 #include "../managers/TextureManager.hpp"
+#include "Constants.hpp"
 #include "Scene.hpp"
 
 class GameScene : public Scene {
@@ -9,7 +10,7 @@ class GameScene : public Scene {
     GameScene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &audioManager,
-        sf::RenderWindow &window
+        InputManager &inputManager, sf::RenderWindow &window
     );
 
     void init() override;
@@ -37,7 +38,7 @@ class GameScene : public Scene {
 
     float m_falling = 0.f; // Za premikanje ptice okoli težišča gor in dol
     unsigned int m_sceneFrame = 0;
-    float m_pipeTimer; // Za ustvarjanje pip
+    float m_pipeTimer = PIPESPAWN; // Za ustvarjanje pip
     // Med delovanjem shranjujemo točke in najboljše točke dosežene
     unsigned int m_score = 0;
     unsigned int m_best = 0;

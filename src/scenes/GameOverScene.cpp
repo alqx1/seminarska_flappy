@@ -23,9 +23,13 @@ static void makeButtons(
 GameOverScene::GameOverScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window, const unsigned int score, const unsigned int best
+    InputManager &inputManager, sf::RenderWindow &window,
+    const unsigned int score, const unsigned int best
 )
-    : Scene(sceneManager, entityManager, textureManager, audioManager, window),
+    : Scene(
+          sceneManager, entityManager, textureManager, audioManager,
+          inputManager, window
+      ),
       m_score(score), m_best(best) {
 }
 
@@ -66,11 +70,11 @@ void GameOverScene::onDeactivate() {
 }
 
 void GameOverScene::sInput() {
-    if (sceneManager.getInputStatus(sf::Keyboard::Space)) {
+    if (inputManager.getInputStatus(sf::Keyboard::Space)) {
         sceneManager.switchTo("pre");
     }
 
-    if (sceneManager.getInputStatus(sf::Keyboard::Q)) {
+    if (inputManager.getInputStatus(sf::Keyboard::Q)) {
         sceneManager.turnOffGame();
     }
 }
@@ -126,13 +130,13 @@ void GameOverScene::sCollision() {
             m_gravityOn = false;
         }
     }
-    if (reset->m_collisionShape->isInside(sceneManager.getMousePos()) &&
-        sceneManager.getMouseStatus(sf::Mouse::Left)) {
+    if (reset->m_collisionShape->isInside(inputManager.getMousePos()) &&
+        inputManager.getMouseStatus(sf::Mouse::Left)) {
         sceneManager.switchTo("pre");
     }
 
-    if (exit->m_collisionShape->isInside(sceneManager.getMousePos()) &&
-        sceneManager.getMouseStatus(sf::Mouse::Left)) {
+    if (exit->m_collisionShape->isInside(inputManager.getMousePos()) &&
+        inputManager.getMouseStatus(sf::Mouse::Left)) {
         sceneManager.turnOffGame();
     }
 }

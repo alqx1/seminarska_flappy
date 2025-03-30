@@ -4,6 +4,7 @@
 #include "managers/EntityManager.hpp"
 #include "managers/SceneManager.hpp"
 #include "managers/TextureManager.hpp"
+#include "managers/InputManager.hpp"
 #include <SFML/Main.hpp>
 
 class GameEngine {
@@ -26,6 +27,7 @@ class GameEngine {
     SceneManager m_sceneManager;
     TextureManager m_textureManager;
     AudioManager m_audioManager;
+    InputManager m_inputManager;
 
     sf::RenderWindow m_window;
 

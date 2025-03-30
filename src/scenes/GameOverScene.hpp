@@ -13,8 +13,8 @@ class GameOverScene : public Scene {
     GameOverScene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &AudioManager,
-        sf::RenderWindow &window, const unsigned int score,
-        const unsigned int best
+        InputManager &inputManager, sf::RenderWindow &window,
+        const unsigned int score, const unsigned int best
     );
     void init() override;
     void run(const sf::Time dt) override;

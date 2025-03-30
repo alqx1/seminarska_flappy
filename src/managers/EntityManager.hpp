@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Entity.hpp"
-#include <cstddef>
-#include <memory>
 #include <unordered_map>
-#include <vector>
 
-typedef std::vector<std::shared_ptr<Entity>> EntityVec;
 
 class EntityManager {
+    typedef std::vector<std::shared_ptr<Entity>> EntityVec;
+
   public:
     EntityManager();
     std::shared_ptr<Entity> addEntity(const EntityTag tag);
@@ -24,7 +22,7 @@ class EntityManager {
     std::unordered_map<EntityTag, EntityVec> m_entityMap;
     EntityVec m_entities;
     EntityVec m_toAdd;
-    size_t m_totalEntites;
+    size_t m_totalEntites = 0;
 
     void destroyEntities(EntityVec &vec);
 };

@@ -1,5 +1,4 @@
 #include "AudioManager.hpp"
-#include <cstdlib>
 #include <iostream>
 
 AudioManager::AudioManager() {
@@ -8,11 +7,11 @@ AudioManager::AudioManager() {
     addSound(sScore, "./audio/point.wav");
 }
 
-// adds buffer to buffer map
+// Doda medpomnilnik v slovar
 void AudioManager::addBuffer(const SoundTag tag, const std::string &filePath) {
     sf::SoundBuffer buf;
     if (!buf.loadFromFile(filePath)) {
-        std::cerr << filePath << " didnt load correctly" << std::endl;
+        std::cerr << filePath << " didnt load correctly" <<  "\n";
         exit(2);
     }
     else {
@@ -20,7 +19,7 @@ void AudioManager::addBuffer(const SoundTag tag, const std::string &filePath) {
     }
 }
 
-// adds SOUND to sound map (different than buffer)
+// Doda ZVOK v slovar (drugače kot medpomnilnik)
 void AudioManager::addSound(const SoundTag tag, const std::string &filePath) {
     addBuffer(tag, filePath);
     auto it = m_buffers.find(tag);
@@ -30,19 +29,18 @@ void AudioManager::addSound(const SoundTag tag, const std::string &filePath) {
         m_sounds.insert_or_assign(m_sounds.begin(), tag, s);
     }
     else {
-        std::cerr << "Wasnt able to load sound correctly" << std::endl;
-        exit(4);
+        std::cerr << "Wasnt able to load sound correctly" << "\n";
+        exit(3);
     }
 }
 
-// plays selected sound
+// Zaigra določen zvok
 void AudioManager::play(const SoundTag tag) {
     auto it = m_sounds.find(tag);
     if (it != m_sounds.end()) {
         it->second.play();
     }
     else {
-        std::cerr << "Couldnt play sound" << std::endl;
-        exit(3);
+        std::cerr << "Couldnt play sound" << "\n";
     }
 }

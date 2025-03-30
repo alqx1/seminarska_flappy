@@ -3,8 +3,6 @@
 #include "GameScene.hpp"
 #include "PreGameScene.hpp"
 
-#define SCALE 2.f
-
 // Funkcije za ustvarjanje raznih entitet
 static void makeMenu(
     std::shared_ptr<Entity> &exit, std::shared_ptr<Entity> &start,
@@ -27,9 +25,12 @@ static void makeBackground(
 MainMenuScene::MainMenuScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window
+    InputManager &inputManager, sf::RenderWindow &window
 )
-    : Scene(sceneManager, entityManager, textureManager, audioManager, window) {
+    : Scene(
+          sceneManager, entityManager, textureManager, audioManager,
+          inputManager, window
+      ) {
 }
 
 void MainMenuScene::init() {
@@ -67,26 +68,26 @@ void MainMenuScene::onDeactivate() {
 void MainMenuScene::startGame() {
     // already makes game scene here
     sceneManager.add(
-        "pre",
-        std::make_shared<PreGameScene>(
-            sceneManager, entityManager, textureManager, audioManager, window
-        )
+        "pre", std::make_shared<PreGameScene>(
+                   sceneManager, entityManager, textureManager, audioManager,
+                   inputManager, window
+               )
     );
     sceneManager.add(
-        "game",
-        std::make_shared<GameScene>(
-            sceneManager, entityManager, textureManager, audioManager, window
-        )
+        "game", std::make_shared<GameScene>(
+                    sceneManager, entityManager, textureManager, audioManager,
+                    inputManager, window
+                )
     );
     sceneManager.switchTo("pre");
 }
 
 void MainMenuScene::sInput() {
-    if (sceneManager.getInputStatus(sf::Keyboard::Space)) {
+    if (inputManager.getInputStatus(sf::Keyboard::Space)) {
         startGame();
     }
 
-    if (sceneManager.getInputStatus(sf::Keyboard::Q)) {
+    if (inputManager.getInputStatus(sf::Keyboard::Q)) {
         sceneManager.turnOffGame();
     }
 }
@@ -119,13 +120,13 @@ void MainMenuScene::sMovement(const sf::Time dt) {
 }
 
 void MainMenuScene::sCollision() {
-    if (sceneManager.getMouseStatus(sf::Mouse::Left)) {
+    if (inputManager.getMouseStatus(sf::Mouse::Left)) {
         // if mouse down, check for collisions
-        if (start->m_collisionShape->isInside(sceneManager.getMousePos())) {
+        if (start->m_collisionShape->isInside(inputManager.getMousePos())) {
             startGame();
         }
 
-        if (exit->m_collisionShape->isInside(sceneManager.getMousePos())) {
+        if (exit->m_collisionShape->isInside(inputManager.getMousePos())) {
             sceneManager.turnOffGame();
         }
     }

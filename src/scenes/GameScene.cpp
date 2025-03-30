@@ -20,9 +20,12 @@ static void gameover();
 GameScene::GameScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window
+    InputManager &inputManager, sf::RenderWindow &window
 )
-    : Scene(sceneManager, entityManager, textureManager, audioManager, window) {
+    : Scene(
+          sceneManager, entityManager, textureManager, audioManager,
+          inputManager, window
+      ) {
 }
 
 void GameScene::init() {
@@ -124,7 +127,7 @@ void GameScene::gameover() {
     sceneManager.add(
         "gameover", std::make_shared<GameOverScene>(
                         sceneManager, entityManager, textureManager,
-                        audioManager, window, m_score, m_best
+                        audioManager, inputManager, window, m_score, m_best
                     )
     );
     sceneManager.switchTo("gameover");
@@ -143,16 +146,16 @@ void GameScene::sSpawner(const sf::Time dt) {
 void GameScene::sInput() {
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
         // if bird hasnt yet jumped -> jump
-        if ((sceneManager.getInputStatus(sf::Keyboard::Space) ||
-             sceneManager.getMouseStatus(sf::Mouse::Left)) &&
+        if ((inputManager.getInputStatus(sf::Keyboard::Space) ||
+             inputManager.getMouseStatus(sf::Mouse::Left)) &&
             !bird->m_cInput->hasJumped) {
             bird->m_cInput->jump = true;
             bird->m_cInput->hasJumped = true;
             audioManager.play(SoundTag::sJump);
         }
         // if nothing is pressed, reset all bool values
-        else if (!(sceneManager.getInputStatus(sf::Keyboard::Space) ||
-                   sceneManager.getMouseStatus(sf::Mouse::Left))) {
+        else if (!(inputManager.getInputStatus(sf::Keyboard::Space) ||
+                   inputManager.getMouseStatus(sf::Mouse::Left))) {
             bird->m_cInput->jump = false;
             bird->m_cInput->hasJumped = false;
         }

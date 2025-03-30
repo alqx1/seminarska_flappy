@@ -4,7 +4,9 @@
 #include <SFML/Window/VideoMode.hpp>
 #include <string>
 
-GameEngine::GameEngine() { init(); }
+GameEngine::GameEngine() {
+    init();
+}
 
 void GameEngine::init() {
     // Za generiranje naključnih števil
@@ -12,7 +14,10 @@ void GameEngine::init() {
 
     // Pripravljanje okna
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    m_window.create(sf::VideoMode(500, 700), "flappy", sf::Style::Titlebar | sf::Style::Close);
+    m_window.create(
+        sf::VideoMode(500, 700), "flappy",
+        sf::Style::Titlebar | sf::Style::Close
+    );
     m_window.setFramerateLimit(60);
     m_window.setKeyRepeatEnabled(false);
 
@@ -20,7 +25,9 @@ void GameEngine::init() {
     m_sceneManager.add(
         "mainmenu", std::make_shared<MainMenuScene>(
                         m_sceneManager, m_entityManager, m_textureManager,
-                        m_audioManager, m_window));
+                        m_audioManager, m_inputManager, m_window
+                    )
+    );
     m_sceneManager.switchTo("mainmenu");
 }
 
@@ -56,27 +63,29 @@ void GameEngine::processEvents() {
         }
 
         if (event.type == sf::Event::KeyPressed) {
-            m_sceneManager.enableInput(event.key.code);
+            m_inputManager.enableInput(event.key.code);
         }
 
         if (event.type == sf::Event::KeyReleased) {
-            m_sceneManager.disableInput(event.key.code);
+            m_inputManager.disableInput(event.key.code);
         }
 
         if (event.type == sf::Event::MouseButtonPressed) {
-            m_sceneManager.enableMouseButton(
-                event.mouseButton.button, sf::Mouse::getPosition(m_window));
+            m_inputManager.enableMouseButton(event.mouseButton.button);
         }
 
         if (event.type == sf::Event::MouseButtonReleased) {
-            m_sceneManager.disableMouseButton(event.mouseButton.button);
+            m_inputManager.disableMouseButton(event.mouseButton.button);
         }
     }
+    m_inputManager.setMousePos(sf::Mouse::getPosition(m_window));
 
-    // Če se je delovanje končalo, ustavi program
-    if (m_sceneManager.isTurnedOff()) {
+        // Če se je delovanje končalo, ustavi program
+        if (m_sceneManager.isTurnedOff()) {
         turnOff();
     }
 }
 
-void GameEngine::turnOff() { m_running = false; }
+void GameEngine::turnOff() {
+    m_running = false;
+}

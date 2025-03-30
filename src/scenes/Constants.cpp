@@ -13,6 +13,6 @@ const float PIPESPEED = 200.f;
 const float GAPPADDING = 50.f;
 const float PIPESPAWN = 1.5f;
 
-const float JUMPVEL = 350.f;
+const float JUMPVEL = 400.f;
 
 const int ANIMSPEED = 10;

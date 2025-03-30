@@ -1,10 +1,7 @@
 #include "SceneManager.hpp"
-#include <unordered_map>
-#include <utility>
 
-#include <SFML/Graphics.hpp>
-
-SceneManager::SceneManager() {}
+SceneManager::SceneManager() {
+}
 
 // run all selected scene's system functions
 void SceneManager::run(const sf::Time dt) {
@@ -13,15 +10,14 @@ void SceneManager::run(const sf::Time dt) {
     }
 }
 
-void SceneManager::add(
-    std::string name, std::shared_ptr<Scene> scene) {
-    auto inserted =
-        m_scenes.insert(std::make_pair(name, scene));
+void SceneManager::add(std::string name, std::shared_ptr<Scene> scene) {
+    auto inserted = m_scenes.insert(std::make_pair(name, scene));
     inserted.first->second->init();
+    m_sceneCounter++;
 }
 
-void SceneManager::switchTo(std::string id) {
-    auto it = m_scenes.find(id);
+void SceneManager::switchTo(std::string name) {
+    auto it = m_scenes.find(name);
 
     if (it != m_scenes.end()) {
         if (m_currentScene) {
@@ -33,8 +29,8 @@ void SceneManager::switchTo(std::string id) {
     }
 }
 
-void SceneManager::remove(std::string id) {
-    auto it = m_scenes.find(id);
+void SceneManager::remove(std::string name) {
+    auto it = m_scenes.find(name);
 
     if (it != m_scenes.end()) {
         if (m_currentScene == it->second) {
@@ -43,57 +39,6 @@ void SceneManager::remove(std::string id) {
 
         m_scenes.erase(it);
     }
-}
-
-// get if key is pressed or not
-bool SceneManager::getInputStatus(const int keyCode) const {
-    auto it = m_inputs.find(keyCode);
-    if (it != m_inputs.end()) {
-        return it->second;
-    }
-    else {
-        return false;
-    }
-}
-
-void SceneManager::enableInput(const int keyCode) {
-    m_inputs.insert_or_assign(
-        m_inputs.begin(), keyCode, true);
-}
-
-void SceneManager::disableInput(const int keyCode) {
-    m_inputs.insert_or_assign(
-        m_inputs.begin(), keyCode, false);
-}
-
-// same as key
-bool SceneManager::getMouseStatus(const int mouseButton) const {
-    auto it = m_mouseButtons.find(mouseButton);
-    if (it != m_mouseButtons.end()) {
-        return it->second;
-    }
-    else {
-        return false;
-    }
-}
-
-void SceneManager::enableMouseButton(
-    const int mouseButton,
-    const sf::Vector2i mousePosition) {
-    m_mouseButtons.insert_or_assign(
-        m_mouseButtons.begin(), mouseButton, true);
-    mousePos.x = mousePosition.x;
-    mousePos.y = mousePosition.y;
-}
-
-void SceneManager::disableMouseButton(
-    const int mouseButton) {
-    m_mouseButtons.insert_or_assign(
-        m_mouseButtons.begin(), mouseButton, false);
-}
-
-sf::Vector2f SceneManager::getMousePos() const {
-    return mousePos;
 }
 
 void SceneManager::turnOffGame() {

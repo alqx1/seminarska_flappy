@@ -2,6 +2,7 @@
 
 #include "../managers/AudioManager.hpp"
 #include "../managers/EntityManager.hpp"
+#include "../managers/InputManager.hpp"
 #include "../managers/SceneManager.hpp"
 #include "../managers/TextureManager.hpp"
 #include <SFML/System/Time.hpp>
@@ -35,13 +36,16 @@ class Scene {
     SceneManager &sceneManager;
     TextureManager &textureManager;
     AudioManager &audioManager;
+    InputManager &inputManager;
     sf::RenderWindow &window;
 
     Scene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &audioManager,
-        sf::RenderWindow &window)
-    : sceneManager(sceneManager), entityManager(entityManager),
-      textureManager(textureManager), audioManager(audioManager),
-      window(window) {}
+        InputManager &inputManager, sf::RenderWindow &window
+    )
+        : sceneManager(sceneManager), entityManager(entityManager),
+          textureManager(textureManager), audioManager(audioManager),
+          inputManager(inputManager), window(window) {
+    }
 };

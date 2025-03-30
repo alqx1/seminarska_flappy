@@ -16,9 +16,12 @@ static void makeMessage(
 PreGameScene::PreGameScene(
     SceneManager &sceneManager, EntityManager &entityManager,
     TextureManager &textureManager, AudioManager &audioManager,
-    sf::RenderWindow &window
+    InputManager &inputManager, sf::RenderWindow &window
 )
-    : Scene(sceneManager, entityManager, textureManager, audioManager, window) {
+    : Scene(
+          sceneManager, entityManager, textureManager, audioManager,
+          inputManager, window
+      ) {
 }
 
 void PreGameScene::run(const sf::Time dt) {
@@ -73,8 +76,8 @@ void PreGameScene::onDeactivate() {
 void PreGameScene::sInput() {
     // Če je že dovolj časa minilo, lahko uporabnik začne
     // igro s levim klikom ali s preslednico
-    if (m_timer > 1.f && (sceneManager.getInputStatus(sf::Keyboard::Space) ||
-                          sceneManager.getMouseStatus(sf::Mouse::Left))) {
+    if (m_timer > 1.f && (inputManager.getInputStatus(sf::Keyboard::Space) ||
+                          inputManager.getMouseStatus(sf::Mouse::Left))) {
         // game scene was already made before,
         // so we can just switch to it now
         sceneManager.switchTo("game");

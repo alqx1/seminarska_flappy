@@ -1,39 +1,41 @@
 #include "EntityManager.hpp"
 #include <algorithm>
 
-EntityManager::EntityManager() : m_totalEntites{0} {}
+typedef std::vector<std::shared_ptr<Entity>> EntityVec;
 
-// adds entity and gives it a unique id
-std::shared_ptr<Entity>
-EntityManager::addEntity(const EntityTag tag) {
+EntityManager::EntityManager() {}
+
+// Doda entiteto in ji da enolični identifikator
+std::shared_ptr<Entity> EntityManager::addEntity(const EntityTag tag) {
     auto e = std::shared_ptr<Entity>(
         new Entity(tag, m_totalEntites++));
     m_toAdd.emplace_back(e);
     return e;
 }
 
-// returns vector of certain entities
+// Vrne vektor entitet določenega tipa
 EntityVec EntityManager::getEntities(const EntityTag tag) {
     return m_entityMap[tag];
 }
 
-// returns all entities
+// Vrne vse entitete
 EntityVec EntityManager::getEntities() {
     return m_entities;
 }
 
-// if entity has been killed
+// Ali je entiteta mrtva
 bool isDead(const std::shared_ptr<Entity> e) {
     return e->isDead();
 }
 
+// Odstrani vse entitete, ki niso več uporabljene
 void EntityManager::destroyEntities(EntityVec &vec) {
     vec.erase(
         std::remove_if(vec.begin(), vec.end(), isDead),
         vec.end());
 }
 
-// updates after everything else has been processed
+// Posodobi vse, ko je bilo že vse sprocesirano
 void EntityManager::update() {
     for (auto &e : m_toAdd) {
         m_entityMap[e->tag()].emplace_back(e);

@@ -10,7 +10,7 @@ class MainMenuScene : public Scene {
     MainMenuScene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &audioManager,
-        sf::RenderWindow &window
+        InputManager &inputManager, sf::RenderWindow &window
     );
 
     void init() override;

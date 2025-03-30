@@ -1,8 +1,7 @@
 #include "TextureManager.hpp"
 #include <iostream>
 
-// adds all needed texture needed by game
-// not optimized
+// Vse teksture, ki jih potrebuje igra
 TextureManager::TextureManager() {
     addTexture(tBird0, "./sprites/yellowbird-upflap.png");
     addTexture(tBird1, "./sprites/yellowbird-midflap.png");
@@ -27,24 +26,24 @@ TextureManager::TextureManager() {
     addTexture(t9, "./sprites/9.png");
 }
 
-// gets texture and exits program if error occurs
+// Vrne teksturo, konča program, če je ne najde
 sf::Texture &TextureManager::getTexture(const TextureTag tag) {
     auto it = m_textures.find(tag);
     if (it != m_textures.end()) {
         return it->second;
     }
     else {
-        std::cerr << "Texture not found" << std::endl;
+        std::cerr << "Texture not found" << "\n";
         exit(1);
     }
 }
 
-// adds texture to texture map
+// Doda teksturo, konča program, če je ne najde
 void TextureManager::addTexture(
     const TextureTag tag, const std::string &filePath) {
     sf::Texture tex;
     if (!tex.loadFromFile(filePath)) {
-        std::cerr << filePath << " didnt load correctly" << std::endl;
+        std::cerr << filePath << "Texture could not load correctly" <<  "\n";
         exit(2);
     }
     else {
