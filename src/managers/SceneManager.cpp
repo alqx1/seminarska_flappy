@@ -3,7 +3,6 @@
 SceneManager::SceneManager() {
 }
 
-// run all selected scene's system functions
 void SceneManager::run(const sf::Time dt) {
     if (m_currentScene) {
         m_currentScene->run(dt);
@@ -11,9 +10,8 @@ void SceneManager::run(const sf::Time dt) {
 }
 
 void SceneManager::add(std::string name, std::shared_ptr<Scene> scene) {
-    auto inserted = m_scenes.insert(std::make_pair(name, scene));
+    auto inserted = m_scenes.insert_or_assign(name, scene);
     inserted.first->second->init();
-    m_sceneCounter++;
 }
 
 void SceneManager::switchTo(std::string name) {
@@ -45,7 +43,6 @@ void SceneManager::turnOffGame() {
     m_running = false;
 }
 
-// gets if game is turned off, used in GameEngine class
 bool SceneManager::isTurnedOff() const {
     return !m_running;
 }

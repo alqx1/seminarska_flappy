@@ -3,6 +3,7 @@
 
 extern const float GRAVITY;
 extern const float SCALE;
+extern const int FPS;
 
 extern const float FLOORHEIGHT;
 
@@ -17,5 +18,6 @@ extern const float PIPESPAWN;
 extern const float JUMPVEL;
 
 extern const int ANIMSPEED;
+extern const float MENUANIMACCEL;
 
 #endif // CONSTANTS_H

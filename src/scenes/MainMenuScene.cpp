@@ -1,5 +1,5 @@
 #include "MainMenuScene.hpp"
-#include "Constants.hpp"
+#include "../Constants.hpp"
 #include "GameScene.hpp"
 #include "PreGameScene.hpp"
 
@@ -34,7 +34,7 @@ MainMenuScene::MainMenuScene(
 }
 
 void MainMenuScene::init() {
-    // Ustvari tla in odzadje
+    // Ustvari tla in ozadje
     makeBase(entityManager, textureManager, window);
     makeBackground(entityManager, textureManager, window);
 }
@@ -99,17 +99,17 @@ void MainMenuScene::sMovement(const sf::Time dt) {
         if (up) {
             if (bird->m_cTransform->velocity.y >= 0) {
                 up = false;
-                bird->m_cTransform->velocity.y = GRAVITY / 2.f;
+                bird->m_cTransform->velocity.y = MENUANIMACCEL / 2.f;
             }
-            bird->m_cTransform->velocity.y += GRAVITY * dt.asSeconds();
+            bird->m_cTransform->velocity.y += MENUANIMACCEL * dt.asSeconds();
         }
         // else take it away
         else {
             if (bird->m_cTransform->velocity.y <= 0) {
                 up = true;
-                bird->m_cTransform->velocity.y = -GRAVITY / 2.f;
+                bird->m_cTransform->velocity.y = -MENUANIMACCEL / 2.f;
             }
-            bird->m_cTransform->velocity.y -= GRAVITY * dt.asSeconds();
+            bird->m_cTransform->velocity.y -= MENUANIMACCEL * dt.asSeconds();
         }
 
         // adds velocity and sets positions
@@ -300,6 +300,15 @@ void makeBird(
     bird->m_sprite->setOrigin(sb.width / 2.f, sb.height / 2.f);
     bird->m_sprite->setScale(SCALE, SCALE);
     bird->m_sprite->setPosition(bird->m_cTransform->pos);
+
+    bird->m_collisionShape = std::make_shared<CRectangle>(
+        sf::Vector2f(sb.width * 0.75f * SCALE, sb.height * 0.75f * SCALE)
+    );
+    bird->m_collisionShape->shape.setOrigin(
+        bird->m_collisionShape->shape.getSize().x / 2,
+        bird->m_collisionShape->shape.getSize().y / 2
+    );
+    bird->m_collisionShape->shape.setPosition(bird->m_cTransform->pos);
 }
 
 void makeBase(

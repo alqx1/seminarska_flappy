@@ -21,7 +21,5 @@ class SceneManager {
     std::unordered_map<std::string, std::shared_ptr<Scene>> m_scenes;
     std::shared_ptr<Scene> m_currentScene;
 
-    unsigned int m_sceneCounter;
-
     bool m_running = true;
 };

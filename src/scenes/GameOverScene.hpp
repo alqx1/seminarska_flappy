@@ -5,8 +5,6 @@
 #include "../managers/SceneManager.hpp"
 #include "../managers/TextureManager.hpp"
 #include "Scene.hpp"
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <memory>
 
 class GameOverScene : public Scene {
   public:

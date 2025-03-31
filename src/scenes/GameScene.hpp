@@ -2,7 +2,7 @@
 #include "../managers/EntityManager.hpp"
 #include "../managers/SceneManager.hpp"
 #include "../managers/TextureManager.hpp"
-#include "Constants.hpp"
+#include "../Constants.hpp"
 #include "Scene.hpp"
 
 class GameScene : public Scene {
@@ -28,10 +28,6 @@ class GameScene : public Scene {
     void sCollision() override;
     void sAnimation() override;
     void sRender() override;
-
-    // Ustvajanje zapisa točk
-    // Naredi par pip, eno zgoraj, drugo spodaj
-    void makePipePair();
 
     // Preide na naslednjo končno sceno
     void gameover();

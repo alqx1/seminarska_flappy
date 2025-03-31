@@ -1,5 +1,5 @@
 #include "GameOverScene.hpp"
-#include "Constants.hpp"
+#include "../Constants.hpp"
 
 // Ustvajanje zapisa točk
 static std::vector<unsigned int>
@@ -46,6 +46,7 @@ void GameOverScene::init() {
                 window.getSize().y - FLOORHEIGHT - yHalf;
         }
 
+        // Skok ptice
         bird->m_cTransform->velocity.y = -JUMPVEL;
         bird->m_cTransform->angle = -30;
     }
@@ -61,12 +62,13 @@ void GameOverScene::onDeactivate() {
     for (auto &button : entityManager.getEntities(EntityTag::button)) {
         button->kill();
     }
-    for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
-        bird->kill();
-    }
     for (auto &pipe : entityManager.getEntities(EntityTag::pipe)) {
         pipe->kill();
     }
+    for (auto &scoreNum : entityManager.getEntities(EntityTag::scoreNumber)) {
+        scoreNum->kill();
+    }
+    entityManager.update();
 }
 
 void GameOverScene::sInput() {

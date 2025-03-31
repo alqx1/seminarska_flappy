@@ -3,7 +3,6 @@
 InputManager::InputManager() {
 }
 
-// get if key is pressed or not
 bool InputManager::getInputStatus(const int keyCode) const {
     auto it = m_inputs.find(keyCode);
     if (it != m_inputs.end()) {
@@ -22,7 +21,6 @@ void InputManager::disableInput(const int keyCode) {
     m_inputs.insert_or_assign(m_inputs.begin(), keyCode, false);
 }
 
-// same as key
 bool InputManager::getMouseStatus(const int mouseButton) const {
     auto it = m_mouseButtons.find(mouseButton);
     if (it != m_mouseButtons.end()) {

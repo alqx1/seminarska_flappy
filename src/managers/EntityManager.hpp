@@ -3,7 +3,6 @@
 #include "Entity.hpp"
 #include <unordered_map>
 
-
 class EntityManager {
     typedef std::vector<std::shared_ptr<Entity>> EntityVec;
 
@@ -13,8 +12,7 @@ class EntityManager {
 
     std::vector<std::shared_ptr<Entity>> getEntities();
 
-    std::vector<std::shared_ptr<Entity>>
-    getEntities(const EntityTag tag);
+    std::vector<std::shared_ptr<Entity>> getEntities(const EntityTag tag);
 
     void update();
 

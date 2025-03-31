@@ -5,7 +5,6 @@
 #include "managers/SceneManager.hpp"
 #include "managers/TextureManager.hpp"
 #include "managers/InputManager.hpp"
-#include <SFML/Main.hpp>
 
 class GameEngine {
   public:

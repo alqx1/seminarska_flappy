@@ -1,5 +1,5 @@
 #include "GameScene.hpp"
-#include "Constants.hpp"
+#include "../Constants.hpp"
 #include "GameOverScene.hpp"
 
 // Ustvajanje zapisa točk
@@ -12,10 +12,10 @@ static void makeScore(
 );
 
 // Naredi par pip, eno zgoraj, drugo spodaj
-static void makePipePair();
-
-// Preide na naslednjo končno sceno
-static void gameover();
+static void makePipePair(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window, unsigned int score
+);
 
 GameScene::GameScene(
     SceneManager &sceneManager, EntityManager &entityManager,
@@ -28,19 +28,30 @@ GameScene::GameScene(
       ) {
 }
 
+void GameScene::run(const sf::Time dt) {
+    sSpawner(dt);
+    sInput();
+    sPhysics();
+    sMovement(dt);
+    sCollision();
+    sAnimation();
+    sRender();
+    m_sceneFrame++;
+}
+
 void GameScene::init() {
 }
 
 void GameScene::onActivate() {
+    // Da se takoj pojavi pipa
     m_pipeTimer = PIPESPAWN;
     m_score = 0;
 
     makeScore(entityManager, textureManager, window, m_score);
-    // dont need to make bird, since its already made in beginning
 }
 
 void GameScene::onDeactivate() {
-    // deletes all that isnt needed for gameover
+    // Odstrani vse kar ni potrebno za naslednjo sceno
     for (auto &scoreNum : entityManager.getEntities(EntityTag::scoreNumber)) {
         scoreNum->kill();
     }
@@ -49,96 +60,11 @@ void GameScene::onDeactivate() {
     }
 }
 
-// random float value between min and max
-const float randomFloat(float min, float max) {
-    return min + static_cast<float>(rand()) /
-                     (static_cast<float>(RAND_MAX / (max - min)));
-}
-
-// makes pair of pipes, one up and one down
-void GameScene::makePipePair() {
-    auto bottomPipe = entityManager.addEntity(EntityTag::pipe);
-    auto topPipe = entityManager.addEntity(EntityTag::pipe);
-
-    sf::Vector2f pipeShape(PIPEWIDTH * SCALE, PIPEHEIGHT * SCALE);
-    bottomPipe->m_collisionShape = std::make_shared<CRectangle>(pipeShape);
-    bottomPipe->m_collisionShape->shape.setOrigin(
-        pipeShape.x / 2.f, pipeShape.y / 2.f
-    );
-    topPipe->m_collisionShape = std::make_shared<CRectangle>(pipeShape);
-    topPipe->m_collisionShape->shape.setOrigin(
-        pipeShape.x / 2.f, pipeShape.y / 2.f
-    );
-
-    float gapSize = randomFloat(MINGAP, MAXGAP);
-    float gapMiddle = randomFloat(
-        GAPPADDING + gapSize / 2.f,
-        window.getSize().y - GAPPADDING - gapSize / 2.f - FLOORHEIGHT
-    );
-
-    float bottomPos = gapMiddle + gapSize / 2 + pipeShape.y / 2.f;
-    float topPos = gapMiddle - gapSize / 2 - pipeShape.y / 2.f;
-
-    bottomPipe->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, bottomPos), 0.f
-    );
-    topPipe->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, topPos), 180.f
-    );
-
-    bottomPipe->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tPipe));
-    topPipe->m_sprite =
-        std::make_shared<sf::Sprite>(textureManager.getTexture(tPipe));
-
-    bottomPipe->m_sprite->setScale(-SCALE, SCALE);
-    topPipe->m_sprite->setScale(SCALE, SCALE);
-
-    sf::FloatRect bb = bottomPipe->m_sprite->getLocalBounds();
-    bottomPipe->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
-    topPipe->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
-
-    topPipe->m_sprite->setRotation(180);
-
-    // collision boxes which up score when touched
-    auto scoreBox = entityManager.addEntity(EntityTag::scoreBox);
-    scoreBox->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(-PIPESPEED, 0),
-        sf::Vector2f(window.getSize().x + pipeShape.x, gapMiddle), 0.f
-    );
-    scoreBox->m_collisionShape =
-        std::make_shared<CRectangle>(sf::Vector2f(pipeShape.x / 2.f, gapSize));
-    sf::FloatRect scorebb = scoreBox->m_collisionShape->shape.getLocalBounds();
-    scoreBox->m_collisionShape->shape.setOrigin(
-        scorebb.width / 2.f, scorebb.height / 2.f
-    );
-    scoreBox->m_collisionShape->shape.setPosition(scoreBox->m_cTransform->pos);
-}
-
-// handles gameovers
-void GameScene::gameover() {
-    if (m_score > m_best) {
-        m_best = m_score;
-    }
-
-    sceneManager.remove("gameover");
-    sceneManager.add(
-        "gameover", std::make_shared<GameOverScene>(
-                        sceneManager, entityManager, textureManager,
-                        audioManager, inputManager, window, m_score, m_best
-                    )
-    );
-    sceneManager.switchTo("gameover");
-    audioManager.play(SoundTag::sHit);
-}
-
 // handles pipes spawning in
 void GameScene::sSpawner(const sf::Time dt) {
     m_pipeTimer += dt.asSeconds();
     if (PIPESPAWN <= m_pipeTimer) {
-        makePipePair();
+        makePipePair(entityManager, textureManager, window, m_score);
         m_pipeTimer = 0.f;
     }
 }
@@ -349,6 +275,7 @@ void GameScene::sRender() {
     for (auto &pipe : entityManager.getEntities(EntityTag::pipe)) {
         if (pipe->m_sprite) {
             window.draw(*pipe->m_sprite);
+            window.draw(pipe->m_collisionShape->shape);
         }
     }
 
@@ -367,19 +294,9 @@ void GameScene::sRender() {
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
         if (bird->m_sprite) {
             window.draw(*bird->m_sprite);
+            window.draw(bird->m_collisionShape->shape);
         }
     }
-}
-
-void GameScene::run(const sf::Time dt) {
-    sSpawner(dt);
-    sInput();
-    sPhysics();
-    sMovement(dt);
-    sCollision();
-    sAnimation();
-    sRender();
-    m_sceneFrame++;
 }
 
 // returns score numbers in vector
@@ -428,4 +345,93 @@ void makeScore(
         );
         number->m_sprite->setScale(SCALE, SCALE);
     }
+}
+
+// Generiranje naključnega realnega števila
+const float randomFloat(float min, float max) {
+    return min + static_cast<float>(rand()) /
+                     (static_cast<float>(RAND_MAX / (max - min)));
+}
+
+// makes pair of pipes, one up and one down
+void makePipePair(
+    EntityManager &entityManager, TextureManager &textureManager,
+    sf::RenderWindow &window, unsigned int score
+) {
+    auto bottomPipe = entityManager.addEntity(EntityTag::pipe);
+    auto topPipe = entityManager.addEntity(EntityTag::pipe);
+
+    sf::Vector2f pipeShape(PIPEWIDTH * SCALE, PIPEHEIGHT * SCALE);
+    sf::Vector2f collisionShape(pipeShape.x, pipeShape.y);
+    bottomPipe->m_collisionShape = std::make_shared<CRectangle>(collisionShape);
+    bottomPipe->m_collisionShape->shape.setOrigin(
+        pipeShape.x / 2.f, pipeShape.y / 2.f
+    );
+    topPipe->m_collisionShape = std::make_shared<CRectangle>(pipeShape);
+    topPipe->m_collisionShape->shape.setOrigin(
+        pipeShape.x / 2.f, pipeShape.y / 2.f
+    );
+
+    float gapSize = randomFloat(MINGAP, MAXGAP);
+    float gapMiddle = randomFloat(
+        GAPPADDING + gapSize / 2.f,
+        window.getSize().y - GAPPADDING - gapSize / 2.f - FLOORHEIGHT
+    );
+
+    float bottomPos = gapMiddle + gapSize / 2 + pipeShape.y / 2.f;
+    float topPos = gapMiddle - gapSize / 2 - pipeShape.y / 2.f;
+
+    bottomPipe->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(-PIPESPEED, 0),
+        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, bottomPos), 0.f
+    );
+    topPipe->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(-PIPESPEED, 0),
+        sf::Vector2f(window.getSize().x + pipeShape.x / 2.f, topPos), 180.f
+    );
+
+    bottomPipe->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tPipe));
+    topPipe->m_sprite =
+        std::make_shared<sf::Sprite>(textureManager.getTexture(tPipe));
+
+    bottomPipe->m_sprite->setScale(-SCALE, SCALE);
+    topPipe->m_sprite->setScale(SCALE, SCALE);
+
+    sf::FloatRect bb = bottomPipe->m_sprite->getLocalBounds();
+    bottomPipe->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
+    topPipe->m_sprite->setOrigin(bb.width / 2.f, bb.height / 2.f);
+
+    topPipe->m_sprite->setRotation(180);
+
+    // collision boxes which up score when touched
+    auto scoreBox = entityManager.addEntity(EntityTag::scoreBox);
+    scoreBox->m_cTransform = std::make_shared<CTransform>(
+        sf::Vector2f(-PIPESPEED, 0),
+        sf::Vector2f(window.getSize().x + pipeShape.x, gapMiddle), 0.f
+    );
+    scoreBox->m_collisionShape =
+        std::make_shared<CRectangle>(sf::Vector2f(pipeShape.x / 2.f, gapSize));
+    sf::FloatRect scorebb = scoreBox->m_collisionShape->shape.getLocalBounds();
+    scoreBox->m_collisionShape->shape.setOrigin(
+        scorebb.width / 2.f, scorebb.height / 2.f
+    );
+    scoreBox->m_collisionShape->shape.setPosition(scoreBox->m_cTransform->pos);
+}
+
+// handles gameovers
+void GameScene::gameover() {
+    if (m_score > m_best) {
+        m_best = m_score;
+    }
+
+    sceneManager.remove("gameover");
+    sceneManager.add(
+        "gameover", std::make_shared<GameOverScene>(
+                        sceneManager, entityManager, textureManager,
+                        audioManager, inputManager, window, m_score, m_best
+                    )
+    );
+    sceneManager.switchTo("gameover");
+    audioManager.play(SoundTag::sHit);
 }

@@ -1,8 +1,6 @@
 #include "GameEngine.hpp"
 #include "scenes/MainMenuScene.hpp"
-#include <SFML/Window/Event.hpp>
-#include <SFML/Window/VideoMode.hpp>
-#include <string>
+#include "Constants.hpp"
 
 GameEngine::GameEngine() {
     init();
@@ -15,10 +13,10 @@ void GameEngine::init() {
     // Pripravljanje okna
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     m_window.create(
-        sf::VideoMode(500, 700), "flappy",
+        sf::VideoMode(500, 700), "Flappy Bird",
         sf::Style::Titlebar | sf::Style::Close
     );
-    m_window.setFramerateLimit(60);
+    m_window.setFramerateLimit(FPS);
     m_window.setKeyRepeatEnabled(false);
 
     // Dodajanje začetne scene v urejevalnik scen
@@ -80,8 +78,8 @@ void GameEngine::processEvents() {
     }
     m_inputManager.setMousePos(sf::Mouse::getPosition(m_window));
 
-        // Če se je delovanje končalo, ustavi program
-        if (m_sceneManager.isTurnedOff()) {
+    // Če se je delovanje končalo, ustavi program
+    if (m_sceneManager.isTurnedOff()) {
         turnOff();
     }
 }

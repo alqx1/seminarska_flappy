@@ -1,11 +1,8 @@
 #include "PreGameScene.hpp"
-#include "Constants.hpp"
+#include "../Constants.hpp"
 
-// Ustvari glavnega igralca
-static void makeBird(
-    EntityManager &entityManager, TextureManager &textureManager,
-    sf::RenderWindow &window
-);
+// Resetira glavnega igralca
+static void resetBird(std::shared_ptr<Entity> bird, sf::Window &window);
 
 // Ustvari zapis, ki ga uporabnik sreča pred začenjanjem igranja
 static void makeMessage(
@@ -40,24 +37,9 @@ void PreGameScene::onActivate() {
     m_timer = 0.f;
     m_up = true;
 
-    for (auto &pipe : entityManager.getEntities(EntityTag::pipe)) {
-        pipe->kill();
-    }
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
-        bird->kill();
+        resetBird(bird, window);
     }
-    for (auto &text : entityManager.getEntities(EntityTag::text)) {
-        text->kill();
-    }
-    for (auto &scoreBox : entityManager.getEntities(EntityTag::scoreBox)) {
-        scoreBox->kill();
-    }
-    for (auto &scoreNum : entityManager.getEntities(EntityTag::scoreNumber)) {
-        scoreNum->kill();
-    }
-    entityManager.update();
-
-    makeBird(entityManager, textureManager, window);
     makeMessage(entityManager, textureManager, window);
 }
 
@@ -65,12 +47,7 @@ void PreGameScene::onDeactivate() {
     for (auto &text : entityManager.getEntities(EntityTag::text)) {
         text->kill();
     }
-    for (auto &scoreBox : entityManager.getEntities(EntityTag::scoreBox)) {
-        scoreBox->kill();
-    }
-    for (auto &scoreNum : entityManager.getEntities(EntityTag::scoreNumber)) {
-        scoreNum->kill();
-    }
+    entityManager.update();
 }
 
 void PreGameScene::sInput() {
@@ -91,23 +68,24 @@ void PreGameScene::sMovement(const sf::Time dt) {
         if (m_up) {
             if (bird->m_cTransform->velocity.y >= 0) {
                 m_up = false;
-                bird->m_cTransform->velocity.y = GRAVITY / 2.f;
+                bird->m_cTransform->velocity.y = MENUANIMACCEL / 2.f;
             }
-            bird->m_cTransform->velocity.y += GRAVITY * dt.asSeconds();
+            bird->m_cTransform->velocity.y += MENUANIMACCEL * dt.asSeconds();
         }
         else {
             if (bird->m_cTransform->velocity.y <= 0) {
                 m_up = true;
-                bird->m_cTransform->velocity.y = -GRAVITY / 2.f;
+                bird->m_cTransform->velocity.y = -MENUANIMACCEL / 2.f;
             }
-            bird->m_cTransform->velocity.y -= GRAVITY * dt.asSeconds();
+            bird->m_cTransform->velocity.y -= MENUANIMACCEL * dt.asSeconds();
         }
 
         bird->m_cTransform->pos.y +=
             bird->m_cTransform->velocity.y * dt.asSeconds();
-        bird->m_sprite->setPosition(
-            sf::Vector2f(bird->m_cTransform->pos.x, bird->m_cTransform->pos.y)
-        );
+        bird->m_cTransform->pos.x +=
+            bird->m_cTransform->velocity.x * dt.asSeconds();
+        bird->m_sprite->setPosition(bird->m_cTransform->pos);
+        bird->m_collisionShape->shape.setPosition(bird->m_cTransform->pos);
     }
 }
 
@@ -178,38 +156,15 @@ void PreGameScene::sRender() {
     }
 }
 
-void makeBird(
-    EntityManager &entityManager, TextureManager &textureManager,
-    sf::RenderWindow &window
-) {
-    auto bird = entityManager.addEntity(EntityTag::bird);
-
-    bird->m_cTransform = std::make_shared<CTransform>(
-        sf::Vector2f(0.f, GRAVITY),
-        sf::Vector2f(
-            window.getSize().x / 2.f - window.getSize().x / 10.f,
-            window.getSize().y / 2.f - window.getSize().y / 10.f
-        ),
-        0.f
-    );
-
-    bird->m_cInput = std::make_shared<CInput>();
-
-    bird->m_sprite = std::make_shared<sf::Sprite>();
-    bird->m_sprite->setTexture(textureManager.getTexture(tBird0));
-    sf::FloatRect sb = bird->m_sprite->getLocalBounds();
-    bird->m_sprite->setOrigin(sb.width / 2.f, sb.height / 2.f);
-    bird->m_sprite->setScale(SCALE, SCALE);
-    bird->m_sprite->setPosition(bird->m_cTransform->pos);
-
-    bird->m_collisionShape = std::make_shared<CRectangle>(
-        sf::Vector2f(sb.width * 0.75f * SCALE, sb.height * 0.75f * SCALE)
-    );
-    bird->m_collisionShape->shape.setOrigin(
-        bird->m_collisionShape->shape.getSize().x / 2,
-        bird->m_collisionShape->shape.getSize().y / 2
-    );
-    bird->m_collisionShape->shape.setPosition(bird->m_cTransform->pos);
+void resetBird(std::shared_ptr<Entity> bird, sf::Window &window) {
+    bird->m_cTransform->angle = 0;
+    bird->m_sprite->setRotation(0);
+    bird->m_cTransform->velocity = {0, 0};
+    bird->m_cTransform->pos = {
+        window.getSize().x / 2.f -
+            window.getSize().x / 10.f, // Ptica je levo od sredine
+        (window.getSize().y - FLOORHEIGHT) / 2.f
+    };
 }
 
 void makeMessage(
