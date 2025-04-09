@@ -32,6 +32,8 @@ class Scene {
     virtual void sRender() {};
 
   protected:
+    // Vsi upravitelji
+    // Protected, ker hočemo, da jih podrazredi uporabljajo
     EntityManager &entityManager;
     SceneManager &sceneManager;
     TextureManager &textureManager;
@@ -39,6 +41,7 @@ class Scene {
     InputManager &inputManager;
     sf::RenderWindow &window;
 
+  public:
     Scene(
         SceneManager &sceneManager, EntityManager &entityManager,
         TextureManager &textureManager, AudioManager &audioManager,

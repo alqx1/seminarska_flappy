@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+// Vse konstante za igro
+
 extern const float GRAVITY;
 extern const float SCALE;
 extern const int FPS;

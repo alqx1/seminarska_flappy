@@ -1,6 +1,6 @@
 #include "GameEngine.hpp"
-#include "scenes/MainMenuScene.hpp"
 #include "Constants.hpp"
+#include "scenes/MainMenuScene.hpp"
 
 GameEngine::GameEngine() {
     init();

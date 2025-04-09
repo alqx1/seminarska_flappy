@@ -33,12 +33,14 @@ GameOverScene::GameOverScene(
       m_score(score), m_best(best) {
 }
 
+
 void GameOverScene::init() {
     makeMenu(entityManager, textureManager, window, m_best, m_score);
     makeButtons(reset, exit, entityManager, textureManager, window);
 
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
-        // if bird in ground, put it outside so it can jump
+        // Moramo postaviti igralca ven iz
+        // tal, da lahko skoči
         auto yHalf = bird->m_collisionShape->shape.getSize().y / 2;
         if (bird->m_cTransform->pos.y + yHalf >=
             window.getSize().y - FLOORHEIGHT) {
@@ -53,6 +55,7 @@ void GameOverScene::init() {
 }
 
 void GameOverScene::onDeactivate() {
+    // Odstrani vse elemente, ki jih naslednja scena ne potrebuje
     for (auto &menu : entityManager.getEntities(EntityTag::menu)) {
         menu->kill();
     }
@@ -72,16 +75,19 @@ void GameOverScene::onDeactivate() {
 }
 
 void GameOverScene::sInput() {
+    // Če uporabnik pretisne preslednico, ponovi igro
     if (inputManager.getInputStatus(sf::Keyboard::Space)) {
         sceneManager.switchTo("pre");
     }
 
+    // Če pritisne Q, ugasni
     if (inputManager.getInputStatus(sf::Keyboard::Q)) {
         sceneManager.turnOffGame();
     }
 }
 
 void GameOverScene::sPhysics() {
+    // Skrbi za padanje ptice
     const float dt = 1.0 / 60;
     const float factor = 10;
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
@@ -92,6 +98,7 @@ void GameOverScene::sPhysics() {
 }
 
 void GameOverScene::sMovement(const sf::Time dt) {
+    // Če ptica še pada, poskrbi za padanje in njeno premikanje/obračanje
     if (m_gravityOn) {
         for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
             if (!bird->m_cTransform) {
@@ -125,13 +132,15 @@ void GameOverScene::sMovement(const sf::Time dt) {
 
 void GameOverScene::sCollision() {
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
-        // if colliding with floor
+        // Če se ptica dotakne tal, prenehaj s padanjem
         auto yHalf = bird->m_collisionShape->shape.getSize().y / 2;
         if (bird->m_cTransform->pos.y + yHalf >
             window.getSize().y - FLOORHEIGHT) {
             m_gravityOn = false;
         }
     }
+
+    // Če uporabnik klikne na gumb, izvede svojo funkcijo
     if (reset->m_collisionShape->isInside(inputManager.getMousePos()) &&
         inputManager.getMouseStatus(sf::Mouse::Left)) {
         sceneManager.switchTo("pre");
@@ -144,6 +153,7 @@ void GameOverScene::sCollision() {
 }
 
 void GameOverScene::sRender() {
+    // Prikaže potrebne entitete
     for (auto &bg : entityManager.getEntities(EntityTag::background)) {
         if (bg->m_sprite) {
             window.draw(*bg->m_sprite);
@@ -203,7 +213,7 @@ void GameOverScene::run(const sf::Time dt) {
     sRender();
 }
 
-// returns score numbers in vector
+// Pridobi vektor števk števila
 std::vector<unsigned int> convertToIndividualNums(const unsigned int num) {
     std::vector<unsigned int> nums;
     unsigned int i = num;
@@ -217,12 +227,14 @@ std::vector<unsigned int> convertToIndividualNums(const unsigned int num) {
     return nums;
 }
 
-// returns what texture for number to use
+// Vrne teksturo števke glede na števko
 TextureTag getScoreNumberTag(const unsigned int num) {
     return (TextureTag)(num + t0);
 }
 
-// makes score numbers
+// Ustvari števila za rezultat
+// Delovanje je enako kot v igrni sceni (GameScene.cpp)
+// le, da so števila manjša
 void makeScore(
     EntityManager &entityManager, TextureManager &textureManager,
     sf::RenderWindow &window, const unsigned int score, const int y
@@ -233,7 +245,7 @@ void makeScore(
     unsigned int numberScale = SCALE * 0.5f;
 
     unsigned int positionFactor =
-        24 * numberScale; // 24 is pixel width of sprite
+        24 * numberScale;
 
     for (int i = 0; i < numsSize; i++) {
         auto number = entityManager.addEntity(EntityTag::scoreNumber);
@@ -253,7 +265,10 @@ void makeMenu(
     EntityManager &entityManager, TextureManager &textureManager,
     sf::RenderWindow &window, const unsigned int best, const unsigned int score
 ) {
+    // Ustvarimo ozadje menija
     auto menu = entityManager.addEntity(EntityTag::menu);
+
+    // Priredimo sliko ozadju menija
     menu->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tGameOver));
     auto menubb = menu->m_sprite->getLocalBounds();
@@ -263,6 +278,7 @@ void makeMenu(
         window.getSize().x / 2.f, window.getSize().y / 2.f
     );
 
+    // Ustvarimo končni tekst
     auto text = entityManager.addEntity(EntityTag::text);
     text->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tGameOverText));
@@ -275,6 +291,7 @@ void makeMenu(
                                       textbb.height * SCALE
     );
 
+    // Ustvarimo rezultat prejšne igre in najboljše igre
     makeScore(
         entityManager, textureManager, window, score,
         menu->m_sprite->getPosition().y -
@@ -292,6 +309,7 @@ void makeButtons(
     EntityManager &entityManager, TextureManager &textureManager,
     sf::RenderWindow &window
 ) {
+    // Ustvarimo gumba za resetiranje in izhod
     reset = entityManager.addEntity(EntityTag::button);
     exit = entityManager.addEntity(EntityTag::button);
 
@@ -302,14 +320,16 @@ void makeButtons(
     float padding = 20;
     sf::Vector2f buttonSize(80 * SCALE, 20 * SCALE);
 
+    // Določimo njuno pozicijo
+    // Centrirana sta glede na sredino
     reset->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(0, 0),
         sf::Vector2f(
-            middlePoint.x - padding - buttonSize.x, // a bit left with padding
+            middlePoint.x - padding - buttonSize.x,
             middlePoint.y - buttonSize.y / 2.f
         ),
         0.f
-    ); // centered with middle
+    );
     exit->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(0, 0),
         sf::Vector2f(
@@ -318,6 +338,7 @@ void makeButtons(
         0.f
     );
 
+    // Priredimo slike
     reset->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tButtons));
     reset->m_sprite->setTextureRect(sf::IntRect(0, 40, 80, 20));
@@ -330,6 +351,7 @@ void makeButtons(
     exit->m_sprite->setPosition(exit->m_cTransform->pos);
     exit->m_sprite->setScale(SCALE, SCALE);
 
+    // Ustvarimo kolizijske like
     reset->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
     exit->m_collisionShape = std::make_shared<CRectangle>(buttonSize);
     reset->m_collisionShape->shape.setPosition(reset->m_cTransform->pos);

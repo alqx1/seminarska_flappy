@@ -1,7 +1,8 @@
 #pragma once
 
-#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics.hpp>
 
+// Struktura za kolizijski lik
 struct CRectangle {
     sf::RectangleShape shape;
 

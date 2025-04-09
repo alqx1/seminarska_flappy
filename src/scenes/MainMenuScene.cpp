@@ -55,7 +55,7 @@ void MainMenuScene::onActivate() {
 }
 
 void MainMenuScene::onDeactivate() {
-    // Odstrani meni in nastali tekst
+    // Odstrani gumbe od menija in narejeni tekst
     for (auto &button : entityManager.getEntities(button)) {
         button->kill();
     }
@@ -66,7 +66,7 @@ void MainMenuScene::onDeactivate() {
 }
 
 void MainMenuScene::startGame() {
-    // already makes game scene here
+    // Ustvarimo predigrno in igrno sceno, da jih nato ne potrebujemo več
     sceneManager.add(
         "pre", std::make_shared<PreGameScene>(
                    sceneManager, entityManager, textureManager, audioManager,
@@ -79,14 +79,17 @@ void MainMenuScene::startGame() {
                     inputManager, window
                 )
     );
+    // Prestavimo dogajanje na predigrno sceno
     sceneManager.switchTo("pre");
 }
 
 void MainMenuScene::sInput() {
+    // Če uporabnik pritisne preslednico, se igra začne
     if (inputManager.getInputStatus(sf::Keyboard::Space)) {
         startGame();
     }
 
+    // Če pritisne Q, program zaostavimo
     if (inputManager.getInputStatus(sf::Keyboard::Q)) {
         sceneManager.turnOffGame();
     }
@@ -94,8 +97,7 @@ void MainMenuScene::sInput() {
 
 void MainMenuScene::sMovement(const sf::Time dt) {
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
-        // bobing motion function
-        // if bird moving up, then slowly add gravity
+        // Premikanje ptice gor in dol
         if (up) {
             if (bird->m_cTransform->velocity.y >= 0) {
                 up = false;
@@ -103,7 +105,6 @@ void MainMenuScene::sMovement(const sf::Time dt) {
             }
             bird->m_cTransform->velocity.y += MENUANIMACCEL * dt.asSeconds();
         }
-        // else take it away
         else {
             if (bird->m_cTransform->velocity.y <= 0) {
                 up = true;
@@ -112,7 +113,7 @@ void MainMenuScene::sMovement(const sf::Time dt) {
             bird->m_cTransform->velocity.y -= MENUANIMACCEL * dt.asSeconds();
         }
 
-        // adds velocity and sets positions
+        // Sprememba pozicije glede na hitrost
         bird->m_cTransform->pos.y +=
             bird->m_cTransform->velocity.y * dt.asSeconds();
         bird->m_sprite->setPosition(bird->m_cTransform->pos);
@@ -120,8 +121,9 @@ void MainMenuScene::sMovement(const sf::Time dt) {
 }
 
 void MainMenuScene::sCollision() {
+    // Preveri, če je uporabnik pretisnil z miško
     if (inputManager.getMouseStatus(sf::Mouse::Left)) {
-        // if mouse down, check for collisions
+        // Če je, preveri, ali je miška znotraj gumba
         if (start->m_collisionShape->isInside(inputManager.getMousePos())) {
             startGame();
         }
@@ -133,14 +135,13 @@ void MainMenuScene::sCollision() {
 }
 
 void MainMenuScene::sAnimation() {
-    // handles animations
-
-    // if its not time to switch animation, return
+    // Ureja hitrost animacije.
     if (m_sceneFrame % ANIMSPEED != 0) {
         return;
     }
 
-    // gets animation frame
+    // Dobi, na kateri sličici animacije je in nato
+    // spremeni na naslednjo, ki mora biti
     int animFrame = (m_sceneFrame / ANIMSPEED) % 4;
     switch (animFrame) {
     case 0: {
@@ -174,7 +175,7 @@ void MainMenuScene::sAnimation() {
 }
 
 void MainMenuScene::sRender() {
-    // renders needed entities
+    // Prikaže potrebne entitete
     for (auto &bg : entityManager.getEntities(EntityTag::background)) {
         if (bg->m_sprite) {
             window.draw(*bg->m_sprite);
@@ -301,6 +302,7 @@ void makeBird(
     bird->m_sprite->setScale(SCALE, SCALE);
     bird->m_sprite->setPosition(bird->m_cTransform->pos);
 
+    // Dodajanje kolizijskega lika
     bird->m_collisionShape = std::make_shared<CRectangle>(
         sf::Vector2f(sb.width * 0.75f * SCALE, sb.height * 0.75f * SCALE)
     );
@@ -318,14 +320,17 @@ void makeBase(
     // Naredi tla (slika, kolizijski pravokotnik, nastavi položaj)
     auto base = entityManager.addEntity(EntityTag::base);
 
+    // Priredi pozicijo
     base->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(-PIPESPEED, 0),
         sf::Vector2f(0, window.getSize().y - FLOORHEIGHT), 0.f
     );
 
+    // Ustvari kolizijski lik
     base->m_collisionShape =
         std::make_shared<CRectangle>(sf::Vector2f(336 * SCALE, 112 * SCALE));
 
+    // Priredi sliko
     base->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tBase));
     base->m_sprite->setScale(SCALE, SCALE);
@@ -336,12 +341,14 @@ void makeBackground(
     EntityManager &entityManager, TextureManager &textureManager,
     sf::RenderWindow &window
 ) {
-    // makes background
+    // Ustvari ozadje
     auto bg = entityManager.addEntity(EntityTag::background);
+    // Nastavi pozicijo
     bg->m_cTransform = std::make_shared<CTransform>(
         sf::Vector2f(0, 0), sf::Vector2f(0, window.getSize().y), 0.f
     );
 
+    // Priredi sliko
     bg->m_sprite =
         std::make_shared<sf::Sprite>(textureManager.getTexture(tBackground));
     bg->m_sprite->setScale(SCALE, SCALE);

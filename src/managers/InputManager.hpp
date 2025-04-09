@@ -7,10 +7,12 @@ class InputManager {
   public:
     InputManager();
 
+    // Pridobimo stanje tipk na tipkovnici
     bool getInputStatus(const int keyCode) const;
     void enableInput(const int keyCode);
     void disableInput(const int keyCode);
 
+    // Pridobimo stanje miške
     bool getMouseStatus(const int mouseButton) const;
     void
     enableMouseButton(const int mouseButton);
@@ -20,6 +22,7 @@ class InputManager {
     void setMousePos(const sf::Vector2i mousePosition);
 
   private:
+    // Tukaj shranjujemo podatke od tipkovnici in miški
     std::unordered_map<unsigned int, bool> m_mouseButtons;
     std::unordered_map<unsigned int, bool> m_inputs;
 

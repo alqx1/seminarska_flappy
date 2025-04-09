@@ -34,19 +34,24 @@ void PreGameScene::init() {
 }
 
 void PreGameScene::onActivate() {
+    // Nastavi vrednosti na prvotne
     m_timer = 0.f;
     m_up = true;
 
+    // Resetira igralčevo pozicijo
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
         resetBird(bird, window);
     }
+    // Ustvari začetni napis
     makeMessage(entityManager, textureManager, window);
 }
 
 void PreGameScene::onDeactivate() {
+    // Odstrani začetni napis
     for (auto &text : entityManager.getEntities(EntityTag::text)) {
         text->kill();
     }
+    // Posodobi to spremembo
     entityManager.update();
 }
 
@@ -55,8 +60,8 @@ void PreGameScene::sInput() {
     // igro s levim klikom ali s preslednico
     if (m_timer > 1.f && (inputManager.getInputStatus(sf::Keyboard::Space) ||
                           inputManager.getMouseStatus(sf::Mouse::Left))) {
-        // game scene was already made before,
-        // so we can just switch to it now
+        // Ne potrebujemo ponovno ustvarjati scene za igro,
+        // saj je bila že narejena
         sceneManager.switchTo("game");
     }
 }
@@ -65,6 +70,7 @@ void PreGameScene::sMovement(const sf::Time dt) {
     // Poskrbi za začetno premikanje ptice/igralca,
     // ki se pomika gor in dol na začetku
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
+        // Premikanje ptice gor in dol
         if (m_up) {
             if (bird->m_cTransform->velocity.y >= 0) {
                 m_up = false;
@@ -80,6 +86,7 @@ void PreGameScene::sMovement(const sf::Time dt) {
             bird->m_cTransform->velocity.y -= MENUANIMACCEL * dt.asSeconds();
         }
 
+        // Spreminjanje pozicije igralca glede na njegovo hitrost
         bird->m_cTransform->pos.y +=
             bird->m_cTransform->velocity.y * dt.asSeconds();
         bird->m_cTransform->pos.x +=
@@ -157,6 +164,7 @@ void PreGameScene::sRender() {
 }
 
 void resetBird(std::shared_ptr<Entity> bird, sf::Window &window) {
+    // Poenostavi podatke od igralca
     bird->m_cTransform->angle = 0;
     bird->m_sprite->setRotation(0);
     bird->m_cTransform->velocity = {0, 0};

@@ -8,8 +8,8 @@ CRectangle::CRectangle(const sf::Vector2f size)
     shape.setOutlineThickness(-5);
 }
 
-// checks if a point is inside
-// used for checking if mouse click was inside bounds
+// Preveri, če je točka znotraj lika
+// Uporabimo pri koliziji miške z gumbom
 bool CRectangle::isInside(const sf::Vector2f pos) {
     bool horizontal =
         pos.x > shape.getPosition().x &&

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <SFML/System/Vector2.hpp>
+#include <SFML/System.hpp>
 
+// Struktura za pozicijo
 struct CTransform {
     sf::Vector2f velocity;
     sf::Vector2f pos;
