@@ -279,7 +279,6 @@ void GameScene::sRender() {
     for (auto &pipe : entityManager.getEntities(EntityTag::pipe)) {
         if (pipe->m_sprite) {
             window.draw(*pipe->m_sprite);
-            window.draw(pipe->m_collisionShape->shape);
         }
     }
 
@@ -298,7 +297,6 @@ void GameScene::sRender() {
     for (auto &bird : entityManager.getEntities(EntityTag::bird)) {
         if (bird->m_sprite) {
             window.draw(*bird->m_sprite);
-            window.draw(bird->m_collisionShape->shape);
         }
     }
 }

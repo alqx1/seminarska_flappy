@@ -35,7 +35,11 @@ FetchContent_MakeAvailable(imgui-sfml)
 ]]
 
 FILE(GLOB_RECURSE CPPSOURCES ./src/*.cpp)
-add_executable(flappy ${CPPSOURCES})
+if(WIN32)
+	add_executable(flappy WIN32 ${CPPSOURCES})
+else()
+	add_executable(flappy ${CPPSOURCES})
+endif()
 target_link_libraries(flappy PRIVATE sfml-graphics sfml-audio)
 # target_link_libraries(flappy PRIVATE ImGui-SFML::ImGui-SFML)
 target_compile_features(flappy PRIVATE cxx_std_17)
